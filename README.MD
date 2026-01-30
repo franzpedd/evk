@@ -26,11 +26,11 @@ Now you're good to and initialize and use the API.
 # Example - Emtpy example
 This example is just an introduction to the API. For a complete example, check [examples](examples) directory.
 ```c
-void evk_render(evkContext* context, float timestep)
+void on_render(evkContext* context, float timestep)
 {
 }
 
-void evk_renderui(evkContext* context, void* cmdbuffer)
+void on_renderui(evkContext* context, void* cmdbuffer)
 {
 }
 
