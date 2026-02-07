@@ -1,10 +1,10 @@
-// Auto-generated from quad_picking_frag.spv
-#ifndef QUAD_PICKING_FRAG_SPV_H
-#define QUAD_PICKING_FRAG_SPV_H
+// Auto-generated from sprite_picking_frag.spv
+#ifndef SPRITE_PICKING_FRAG_SPV_H
+#define SPRITE_PICKING_FRAG_SPV_H
 
 #include <stdint.h>
 
-const uint32_t quad_picking_frag_spv[] = {
+const uint32_t sprite_picking_frag_spv[] = {
     0x07230203, 0x00010000, 0x000d000b, 0x0000001b, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
     0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
     0x0006000f, 0x00000004, 0x00000004, 0x6e69616d, 0x00000000, 0x00000008, 0x00030010, 0x00000004,
@@ -43,5 +43,5 @@ const uint32_t quad_picking_frag_spv[] = {
     0x000200f8, 0x00000005, 0x00050041, 0x00000011, 0x00000012, 0x0000000e, 0x00000010, 0x0004003d,
     0x00000006, 0x00000013, 0x00000012, 0x0003003e, 0x00000008, 0x00000013, 0x000100fd, 0x00010038,
 };
-const uint32_t quad_picking_frag_spv_size = 296;
-#endif // QUAD_PICKING_FRAG_SPV_H
+const uint32_t sprite_picking_frag_spv_size = 296;
+#endif // SPRITE_PICKING_FRAG_SPV_H

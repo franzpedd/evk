@@ -1,9 +1,9 @@
 #include "evk_vulkan_renderphase.h"
 
-#include "shader/quad_default_vert_spv.c"
-#include "shader/quad_default_frag_spv.c"
-#include "shader/quad_picking_vert_spv.c"
-#include "shader/quad_picking_frag_spv.c"
+#include "shader/sprite_default_vert_spv.h"
+#include "shader/sprite_default_frag_spv.h"
+#include "shader/sprite_picking_vert_spv.h"
+#include "shader/sprite_picking_frag_spv.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Internal
@@ -305,16 +305,16 @@ static evkShader ievk_pipeline_create_shader(VkDevice device, const char* name, 
 // Pipelines
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device)
+evkResult evk_pipeline_sprite_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device)
 {
 	// default pipeline
-	evkPipeline* defaultPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_QUAD_DEFAULT_NAME);
+	evkPipeline* defaultPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_DEFAULT_NAME);
 	if (defaultPipeline != NULL) ievk_pipeline_destroy(device, defaultPipeline);
 
 	evkPipelineCreateInfo ci = { 0 };
 	ci.renderpass = renderpass; // this will either be default or viewport renderpass
-	ci.vertexShader = ievk_pipeline_create_shader(device, "quad.vert", quad_default_vert_spv, quad_default_vert_spv_size, evk_Shader_Type_Vertex);
-	ci.fragmentShader = ievk_pipeline_create_shader(device, "quad.frag", quad_default_frag_spv, quad_default_frag_spv_size, evk_Shader_Type_Fragment);
+	ci.vertexShader = ievk_pipeline_create_shader(device, "sprite.vert", sprite_default_vert_spv, sprite_default_vert_spv_size, evk_Shader_Type_Vertex);
+	ci.fragmentShader = ievk_pipeline_create_shader(device, "sprite.frag", sprite_default_frag_spv, sprite_default_frag_spv_size, evk_Shader_Type_Fragment);
 	ci.passingVertexData = false;
 	ci.alphaBlending = true;
 
@@ -332,7 +332,7 @@ evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderp
 	ci.bindings[0].descriptorCount = 1;
 	ci.bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	ci.bindings[0].pImmutableSamplers = NULL;
-	// quad data
+	// quasprited data
 	ci.bindings[1].binding = 1;
 	ci.bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	ci.bindings[1].descriptorCount = 1;
@@ -346,22 +346,22 @@ evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderp
 	ci.bindings[2].pImmutableSamplers = NULL;
 
 	defaultPipeline = (evkPipeline*)m_malloc(sizeof(evkPipeline));
-	EVK_ASSERT(defaultPipeline != NULL, "Failed to allocate memory for quad default pipeline creation");
+	EVK_ASSERT(defaultPipeline != NULL, "Failed to allocate memory for sprite default pipeline creation");
 
-	EVK_ASSERT(ievk_pipeline_create(device, &ci, defaultPipeline) == evk_Success, "Failed to create quad default pipeline");
+	EVK_ASSERT(ievk_pipeline_create(device, &ci, defaultPipeline) == evk_Success, "Failed to create sprite default pipeline");
 	defaultPipeline->renderpass = renderpass;
-	defaultPipeline->rasterizationState.cullMode = VK_CULL_MODE_NONE;
-	EVK_ASSERT(ievk_pipeline_build(device, defaultPipeline) == evk_Success, "Failed to build quad default pipeline");
-	EVK_ASSERT(shashtable_insert(pipelines, EVK_PIPELINE_QUAD_DEFAULT_NAME, defaultPipeline) == CTOOLBOX_SUCCESS, "Failed to insert quad default pipeline into pipeline's library");
+	defaultPipeline->rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
+	EVK_ASSERT(ievk_pipeline_build(device, defaultPipeline) == evk_Success, "Failed to build sprite default pipeline");
+	EVK_ASSERT(shashtable_insert(pipelines, EVK_PIPELINE_SPRITE_DEFAULT_NAME, defaultPipeline) == CTOOLBOX_SUCCESS, "Failed to insert sprite default pipeline into pipeline's library");
 	
 	// picking pipeline
-	evkPipeline* pickingPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_QUAD_PICKING_NAME);
+	evkPipeline* pickingPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_PICKING_NAME);
 	if (pickingPipeline != NULL) ievk_pipeline_destroy(device, pickingPipeline);
 	
 	ci = (evkPipelineCreateInfo){ 0 };
 	ci.renderpass = pickingRenderpass;
-	ci.vertexShader = ievk_pipeline_create_shader(device, "quad.vert", quad_picking_vert_spv, quad_picking_vert_spv_size, evk_Shader_Type_Vertex);
-	ci.fragmentShader = ievk_pipeline_create_shader(device, "quad.frag", quad_picking_frag_spv, quad_picking_frag_spv_size, evk_Shader_Type_Fragment);
+	ci.vertexShader = ievk_pipeline_create_shader(device, "sprite.vert", sprite_picking_vert_spv, sprite_picking_vert_spv_size, evk_Shader_Type_Vertex);
+	ci.fragmentShader = ievk_pipeline_create_shader(device, "sprite.frag", sprite_picking_frag_spv, sprite_picking_frag_spv_size, evk_Shader_Type_Fragment);
 	ci.passingVertexData = false;
 	ci.alphaBlending = false;
 	
@@ -379,7 +379,7 @@ evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderp
 	ci.bindings[0].descriptorCount = 1;
 	ci.bindings[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	ci.bindings[0].pImmutableSamplers = NULL;
-	// quad data
+	// sprite data
 	ci.bindings[1].binding = 1;
 	ci.bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	ci.bindings[1].descriptorCount = 1;
@@ -393,26 +393,26 @@ evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderp
 	ci.bindings[2].pImmutableSamplers = NULL;
 	
 	pickingPipeline = (evkPipeline*)m_malloc(sizeof(evkPipeline));
-	EVK_ASSERT(pickingPipeline != NULL, "Failed to allocate memory for quad picking pipeline creation");
+	EVK_ASSERT(pickingPipeline != NULL, "Failed to allocate memory for sprite picking pipeline creation");
 
-	EVK_ASSERT(ievk_pipeline_create(device, &ci, pickingPipeline) == evk_Success, "Failed to create quad picking pipeline");
+	EVK_ASSERT(ievk_pipeline_create(device, &ci, pickingPipeline) == evk_Success, "Failed to create sprite picking pipeline");
 	pickingPipeline->renderpass = pickingRenderpass;
-	pickingPipeline->rasterizationState.cullMode = VK_CULL_MODE_NONE;
+	pickingPipeline->rasterizationState.cullMode = VK_CULL_MODE_BACK_BIT;
 	pickingPipeline->colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT; // id's are RED channel only
-	EVK_ASSERT(ievk_pipeline_build(device, pickingPipeline) == evk_Success, "Failed to build quad picking pipeline");
-	EVK_ASSERT(shashtable_insert(pipelines, EVK_PIPELINE_QUAD_PICKING_NAME, pickingPipeline) == CTOOLBOX_SUCCESS, "Failed to insert quad picking pipeline into pipeline's library");
+	EVK_ASSERT(ievk_pipeline_build(device, pickingPipeline) == evk_Success, "Failed to build sprite picking pipeline");
+	EVK_ASSERT(shashtable_insert(pipelines, EVK_PIPELINE_SPRITE_PICKING_NAME, pickingPipeline) == CTOOLBOX_SUCCESS, "Failed to insert sprite picking pipeline into pipeline's library");
 
 	EVK_ASSERT(evk_Todo, "Create wireframe pipeline");
 	return evk_Success;
 }
 
-void evk_pipeline_quad_destroy(shashtable* pipelines, VkDevice device)
+void evk_pipeline_sprite_destroy(shashtable* pipelines, VkDevice device)
 {
-	evkPipeline* pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_QUAD_DEFAULT_NAME);
+	evkPipeline* pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_DEFAULT_NAME);
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 	pipe = NULL;
 
-	pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_QUAD_PICKING_NAME);
+	pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_PICKING_NAME);
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 	pipe = NULL;
 }

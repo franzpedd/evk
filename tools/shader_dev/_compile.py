@@ -6,11 +6,13 @@ import struct
 from pathlib import Path
 
 # config
+OPTIMIZE = False            # will reduce binary size
 SHADER_DIR = ""             # where GLSL shaders are located (root)
 OUTPUT_DIR = "bin"          # where SPIR-V files will be saved
 HEADER_DIR = "../../evk/include/shader"  # where C headers will be generated
 EXT_MAP = { '.vert':'vertex','.frag':'fragment','.comp':'compute','.geom':'geometry' }
 SHADER_EXTS = { *EXT_MAP.keys(), '.glsl' }
+
 
 # returns what compiler found
 def find_compiler():
@@ -23,25 +25,43 @@ def find_compiler():
     return None
 
 # compiles a shader
-def compile_shader(compiler, inp, out_dir, hdr_dir):
+def compile_shader(compiler, inp, out_dir, hdr_dir, optimize):
     inp = Path(inp)
     shader_type = inp.suffix[1:]
     out_name = f"{inp.stem}_{shader_type}.spv"
     out = Path(out_dir) / out_name
     out.parent.mkdir(parents=True, exist_ok=True)
     
-    cmd = [compiler, str(inp), '-o', str(out)]
+    cmd = []
+    
     if compiler == 'glslangValidator':
         cmd = [compiler, '-V', str(inp), '-o', str(out)]
         if stage:=EXT_MAP.get(inp.suffix.lower()):
             cmd.extend(['-S', stage])
+        if optimize: 
+            cmd.extend(['-Os', '--strip-debug']) # optimize for size and strip debug
+        
+    elif 'glslc' in compiler or compiler == 'glslc':
+        cmd = [compiler, str(inp), '-o', str(out)]
+        if optimize: 
+            cmd.extend(['-O'])  # # just use optimization without debug stripping
+        
+    else:
+        cmd = [compiler, str(inp), '-o', str(out)]
+        if optimize: 
+            cmd.extend(['-Os'])  # try size optimization
+    
+    if hdr_dir and Path(hdr_dir).exists():
+        if compiler == 'glslangValidator':
+            cmd.extend(['-I', str(hdr_dir)])
+        elif 'glslc' in compiler or compiler == 'glslc':
+            cmd.extend(['-I', str(hdr_dir)])
     
     try:
         print(f"  {inp.name} -> {out.name}", end=' ')
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         if r.returncode:
-            if r.stderr: 
-                print(f"[FAILURE]: {r.stderr[:100]}...")
+            if r.stderr: print(f"[FAILURE]: {r.stderr[:100]}...")
             return None
         size = out.stat().st_size
         print(f"[SUCCESS] ({size} bytes)")
@@ -55,7 +75,7 @@ def generate_header(spv_path, hdr_dir):
     try:
         data = spv_path.read_bytes()
         var_name = f"{spv_path.stem}_spv"
-        out = Path(hdr_dir) / f"{var_name}.c"
+        out = Path(hdr_dir) / f"{var_name}.h"
         out.parent.mkdir(parents=True, exist_ok=True)
         
         if len(data) % 4 != 0:
@@ -116,7 +136,7 @@ def main():
     # compile shaders
     compiled = []
     for shader in shaders:
-        spv = compile_shader(compiler, shader, OUTPUT_DIR, HEADER_DIR)
+        spv = compile_shader(compiler, shader, OUTPUT_DIR, HEADER_DIR, OPTIMIZE)
         if spv: compiled.append(spv)
     
     # generate headers

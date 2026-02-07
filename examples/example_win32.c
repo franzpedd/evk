@@ -11,7 +11,10 @@
 #define WIN_CLASSNAME "ExampleClass"
 #define WIN_TITLENAME "Example"
 
-HWND g_HWND;
+typedef struct example_t
+{
+    evkSprite* sprite;
+} example;
 
 typedef struct timestep_t
 {
@@ -23,6 +26,9 @@ typedef struct timestep_t
     unsigned int frame_count;
     float fps;
 } timestep;
+
+HWND g_HWND;
+example g_Example;
 
 /// @brief initialize timestep
 static void timestep_init(timestep* ts)
@@ -83,9 +89,29 @@ static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 
         case WM_KEYDOWN:
         {
-            if (wparam == VK_ESCAPE) {
-                PostQuitMessage(0);
+            switch (wparam)
+            {
+                case VK_ESCAPE: { PostQuitMessage(0); break; }
+                case 'Z': case 'z': { evk_camera_set_lock(evk_get_main_camera(), !evk_camera_get_lock(evk_get_main_camera())); break; }
+                case 'W': case 'w': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Forward, true); break; }
+                case 'S': case 's': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Backward, true); break; }
+                case 'A': case 'a': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Left, true); break; }
+                case 'D': case 'd': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Right, true); break; }
             }
+
+            return 0;
+        }
+
+        case WM_KEYUP:
+        {
+            switch (wparam)
+            {
+                case 'W': case 'w': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Forward, false); break; }
+                case 'S': case 's': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Backward, false); break; }
+                case 'A': case 'a': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Left, false); break; }
+                case 'D': case 'd': { evk_camera_move(evk_get_main_camera(), evk_Camera_Direction_Right, false); break; }
+            }
+
             return 0;
         }
 
@@ -153,6 +179,19 @@ static void win32_window_create()
     UpdateWindow(g_HWND);
 }
 
+static void examples_create()
+{
+    memset(&g_Example, 0, sizeof(example));
+   
+    // testing path under visual studio, user should handle this 
+    g_Example.sprite = evk_sprite_create_from_path("assets/texture/error.png", 1); // hardcodding an id, user should handle object ids
+}
+
+static void examples_destroy()
+{
+    evk_sprite_destroy(g_Example.sprite);
+}
+
 static void win32_event_loop()
 {
     MSG msg = { 0 };
@@ -197,7 +236,34 @@ static void win32_event_loop()
 // this is called multiple times per update, one for rendering the objects, other for rendering the objects id
 void on_render(evkContext* context, float timestep)
 {
-    //printf("Time to render objects\n");
+    // example on how to obtain a model matrix based on transformation component
+    float3 translation = { 2.0f, 1.0f, 0.0f };  // since main camera spawns at [0, 1, 0]
+    float3 rotation = { 270.0f, 0.0f, 0.0f };   // yeah, must rotate the sprite X so it faces the camera
+    float3 scale = { 0.5f, 0.5f, 1.0f };        // scale is at your will, z is ignored on sprites
+
+    float3 rot_sprite = { to_fradians(rotation.xyz.x), to_fradians(rotation.xyz.y), to_fradians(rotation.xyz.z) };
+    fquat quaternion = fquat_from_euler(&rot_sprite);
+    fmat4 rot_matrix = fquat_to_fmat4_rowmajor(&quaternion);
+
+    fmat4 model_matrix = fmat4_identity();
+    model_matrix.matrix.m00 = rot_matrix.matrix.m00 * scale.xyz.x;
+    model_matrix.matrix.m01 = rot_matrix.matrix.m01 * scale.xyz.x;
+    model_matrix.matrix.m02 = rot_matrix.matrix.m02 * scale.xyz.x;
+
+    model_matrix.matrix.m10 = rot_matrix.matrix.m10 * scale.xyz.y;
+    model_matrix.matrix.m11 = rot_matrix.matrix.m11 * scale.xyz.y;
+    model_matrix.matrix.m12 = rot_matrix.matrix.m12 * scale.xyz.y;
+
+    model_matrix.matrix.m20 = rot_matrix.matrix.m20 * scale.xyz.z;
+    model_matrix.matrix.m21 = rot_matrix.matrix.m21 * scale.xyz.z;
+    model_matrix.matrix.m22 = rot_matrix.matrix.m22 * scale.xyz.z;
+
+    model_matrix.matrix.m30 = translation.xyz.x;
+    model_matrix.matrix.m31 = translation.xyz.y;
+    model_matrix.matrix.m32 = translation.xyz.z;
+
+    // render sprite
+    evk_sprite_render(g_Example.sprite, &model_matrix);
 }
 
 // this is called once per update
@@ -225,7 +291,11 @@ int main(int argc, char** argv)
     evkResult res = evk_init(&info);
     evk_set_render_callback(on_render);        // this function will be called when it's time to render objects
     evk_set_renderui_callback(on_renderui);    // this function will be called when it's time to render ui objects
+    
+    examples_create();
     win32_event_loop();
+
+    examples_destroy();
     res = evk_shutdown();
 
     return 0;

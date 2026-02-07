@@ -108,6 +108,15 @@ typedef enum evkVertexComponent
 	evk_Vertex_Component_Max
 } evkVertexComponent;
 
+/// @brief all renderphases 
+typedef enum evkRenderphaseType
+{
+	evk_Renderphase_Type_Main,
+	evk_Renderphase_Type_Picking,
+	evk_Renderphase_Type_UI,
+	evk_Renderphase_Type_Viewport
+} evkRenderphaseType;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structs
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +151,12 @@ typedef struct evkVulkanBackend evkVulkanBackend;
 /// @brief definition of the camera structure
 typedef struct evkCamera evkCamera;
 
+/// @brief definition of the 2D texture structure
+typedef struct evkTexture2D evkTexture2D;
+
+/// @brief definition of the sprite structure
+typedef struct evkSprite evkSprite;
+
 /// @brief holds information about a particular vertex
 typedef struct evkVertex
 {
@@ -167,6 +182,14 @@ typedef struct evkCameraUBO
 	align_as(16) fmat4 viewInverse;
 	align_as(16) fmat4 proj;
 } evkCameraUBO;
+
+/// @brief holds information about a sprite data, sent to gpu per sprite object
+typedef struct evkSpriteUBO
+{
+	align_as(4) float uv_rotation;	// rotates the uv textures
+	align_as(8) float2 uv_offset;	// used to offset the uv textures
+	align_as(8) float2 uv_scale;	// used to scale the uv textures
+} evkSpriteUBO;
 
 /// @brief holds information about the window the API will be displaying to
 typedef struct evkWindow

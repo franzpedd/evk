@@ -79,14 +79,14 @@ typedef struct evkPipeline
 } evkPipeline;
 
 /// @brief name of pipelines for easy hashtable lookup
-#define EVK_PIPELINE_QUAD_DEFAULT_NAME "QUAD:DEFAULT"
-#define EVK_PIPELINE_QUAD_PICKING_NAME "QUAD:PICKING"
+#define EVK_PIPELINE_SPRITE_DEFAULT_NAME "SPRITE:DEFAULT"
+#define EVK_PIPELINE_SPRITE_PICKING_NAME "SPRITE:PICKING"
 
-/// @brief creates the quad pipeline
-evkResult evk_pipeline_quad_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device);
+/// @brief creates the sprite pipeline
+evkResult evk_pipeline_sprite_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device);
 
-/// @brief releases all resources used in the quad pipeline
-void evk_pipeline_quad_destroy(shashtable* pipelines, VkDevice device);
+/// @brief releases all resources used in the sprite pipeline
+void evk_pipeline_sprite_destroy(shashtable* pipelines, VkDevice device);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Main render phase
@@ -219,7 +219,7 @@ void evk_renderphase_viewport_update(evkViewportRenderphase* renderphase, VkDevi
 /// @brief prevents circular dependency
 #ifdef EVK_VULKAN_RENDERPHASE_IMPLEMENTATION
 #undef EVK_VULKAN_RENDERPHASE_IMPLEMENTATION
-#include "evk_vulkan_renderphase.c"
+#include "evk_vulkan_renderphase_impl.h"
 #endif
 
 #endif // EVK_VULKAN_RENDERPHASE_INCLUDED

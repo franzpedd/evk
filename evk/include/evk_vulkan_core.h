@@ -23,8 +23,57 @@ void evk_update_backend(float timestep, bool* mustResize);
 /// @brief reads the id of the picking renderphase and returns it's number (object id) or 0 if no object was on the coord
 uint32_t evk_pick_object_backend(float2 xy);
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Getter/Setter
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/// @brief returns the vulkan instanced created by the backend
+VkInstance evk_get_instance();
+
+/// @brief returns the vulkan physical device created by the backend
+VkPhysicalDevice evk_get_physical_device();
+
+/// @brief returhs tthe vulkan physical device properties stored in the backend from the choosen physical device
+VkPhysicalDeviceProperties evk_get_physical_device_properties();
+
+/// @brief returhs tthe vulkan physical device features stored in the backend from the choosen physical device
+VkPhysicalDeviceFeatures evk_get_physical_device_features();
+
+/// @brief returhs tthe vulkan physical device memory properties stored in the backend from the choosen physical device
+VkPhysicalDeviceMemoryProperties evk_get_physical_device_memory_properties();
+
+/// @brief returns the vulkan device created by the backend
+VkDevice evk_get_device();
+
 /// @brief returns the choosen graphics queue uppon device creation
 VkQueue evk_get_graphics_queue();
+
+/// @brief returns the renderpass of a particular renderphase
+VkRenderPass evk_get_renderpass(evkRenderphaseType type);
+
+/// @brief returns the command pool of a particular renderphase
+VkCommandPool evk_get_command_pool(evkRenderphaseType type);
+
+/// @brief returns the descriptor pool used for ui
+VkDescriptorPool evk_get_ui_descriptor_pool();
+
+/// @brief returns the descriptor set layout used for ui
+VkDescriptorSetLayout evk_get_ui_descriptor_set_layout();
+
+/// @brief this is a work-around to retrieve the render phase without defining it yet
+void* evk_get_renderphase(evkRenderphaseType type);
+
+/// @brief returns the pipelines library
+shashtable* evk_get_pipelines_library();
+
+/// @brief returns the buffers library
+shashtable* evk_get_buffers_library();
+
+/// @brief returns the number of the frame(double buffering) being handled at the time
+uint32_t evk_get_current_frame();
+
+/// @brief returns the current renderphase type at the time
+evkRenderphaseType evk_get_current_renderphase_type();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Device
@@ -45,6 +94,9 @@ evkResult evk_device_create_image_sampler(VkDevice device, VkPhysicalDevice phys
 /// @brief creates an image descriptor set based on various params
 evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, VkImageView view, VkDescriptorSet* outDescriptor);
 
+/// @brief generates mipmaps for the image
+void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, int32_t width, int32_t height, int32_t mipLevels, VkImage image);
+
 /// @brief synchronizes image layout transitions and memory access between pipeline stages
 void evk_device_create_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImage image, VkAccessFlags srcAccessFlags, VkAccessFlags dstAccessFlags, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageSubresourceRange subresourceRange);
 
@@ -57,11 +109,17 @@ VkFormat evk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const 
 /// @brief retrieves the most appropriate format for a depth buffer
 VkFormat evk_device_find_depth_format(VkPhysicalDevice physicalDevice);
 
+/// @brief creates a buffer on the gpu for fast usage
+evkResult evk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize size, VkBuffer* buffer, VkDeviceMemory* memory, void* data);
+
 /// @brief starts the recording of a command buffer that will be used only once
 VkCommandBuffer evk_device_begin_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool);
 
 /// @brief ends the recording of the single time command buffer and send it to a queue
 evkResult evk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue);
+
+/// @brief returns the image mip mapping based on current api specification
+int32_t evk_device_calculate_image_mipmap(uint32_t width, uint32_t height, bool uiImage);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Buffer
@@ -71,6 +129,7 @@ typedef struct evkBuffer
 {
 	VkDeviceSize size;
 	VkDeviceSize originalDataSize;
+	VkDeviceSize alignedPerFrameSize;
 	VkBufferUsageFlags usage;
 	VkMemoryPropertyFlags memoryProperties;
 	uint32_t frameCount;
@@ -110,7 +169,7 @@ evkResult evk_buffer_command_copy(VkCommandBuffer commandBuffer, evkBuffer* srcB
 /// @brief prevents circular dependency
 #ifdef EVK_VULKAN_CORE_IMPLEMENTATION
 #undef EVK_VULKAN_CORE_IMPLEMENTATION
-#include "evk_vulkan_core.c"
+#include "evk_vulkan_core_impl.h"
 #endif
 
 #endif // EVK_VULKAN_CORE_INCLUDED

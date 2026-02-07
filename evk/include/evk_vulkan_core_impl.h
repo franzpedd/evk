@@ -5,6 +5,9 @@
 #define EVK_VULKAN_RENDERPHASE_IMPLEMENTATION
 #include "evk_vulkan_renderphase.h"
 
+#define EVK_VULKAN_DRAWABLE_IMPLEMENTATION
+#include "evk_vulkan_drawable.h"
+
 #ifdef __cplusplus 
 extern "C" {
 #endif
@@ -78,6 +81,7 @@ struct evkVulkanBackend
     evkSwapchain evkSwapchain;
     evkSync evkSync;
     
+    evkRenderphaseType currentRenderphase;
     evkMainRenderphase evkMainRenderphase;
     evkPickingRenderphase evkPickingRenderphase;
     evkUIRenderphase evkUIRenderphase;
@@ -480,6 +484,7 @@ static evkDevice ievk_device_create(VkInstance instance, VkSurfaceKHR surface, V
     device.computeIndex = indices.compute;
 
     m_free(queueCreateInfos);
+
     return device;
 }
 
@@ -702,8 +707,7 @@ static void ievk_resize(VkExtent2D extent)
         EVK_ASSERT(evk_renderphase_viewport_create_framebuffers(&g_EVKBackend->evkViewportRenderphase, g_EVKBackend->evkDevice.device, g_EVKBackend->evkDevice.physicalDevice, g_EVKBackend->evkSwapchain.imageViews, g_EVKBackend->evkSwapchain.imageCount, g_EVKBackend->evkSwapchain.extent, g_EVKBackend->evkSwapchain.format.format) == evk_Success, "Failed to create viewport framebuffers");
     }
 
-    // now should be a nice place to update any camera aspect ratio
-    // notify the user?
+    evk_camera_set_aspect_ratio(evk_get_main_camera(), (float)(extent.width / extent.height));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -773,21 +777,21 @@ evkResult evk_initialize_backend(const evkCreateInfo* ci)
 
     // buffers
     evkBuffer* cameraBuffer = evk_buffer_create(g_EVKBackend->evkDevice.device, g_EVKBackend->evkDevice.physicalDevice, sizeof(evkCameraUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, EVK_CONCURRENTLY_RENDERED_FRAMES);
-    EVK_ASSERT(shashtable_insert(g_EVKBackend->buffers, "Camera", cameraBuffer) == CTOOLBOX_SUCCESS, "Failed to insert camera buffer into the buffer library");
+    EVK_ASSERT(shashtable_insert(g_EVKBackend->buffers, "MainCamera", cameraBuffer) == CTOOLBOX_SUCCESS, "Failed to insert camera buffer into the buffer library");
 
     // pipelines
     evkRenderpass* renderpass = evk_using_viewport() ? &g_EVKBackend->evkViewportRenderphase.evkRenderpass : &g_EVKBackend->evkMainRenderphase.evkRenderpass;
-    EVK_ASSERT(evk_pipeline_quad_create(g_EVKBackend->pipelines, renderpass, &g_EVKBackend->evkPickingRenderphase.evkRenderpass, g_EVKBackend->evkDevice.device) == evk_Success, "Failed to create quad pipelines");
+    EVK_ASSERT(evk_pipeline_sprite_create(g_EVKBackend->pipelines, renderpass, &g_EVKBackend->evkPickingRenderphase.evkRenderpass, g_EVKBackend->evkDevice.device) == evk_Success, "Failed to create quad pipelines");
 
     return evk_Success;
 }
 
 void evk_shutdown_backend()
 {
-    evk_buffer_destroy(g_EVKBackend->evkDevice.device, (evkBuffer*)shashtable_lookup(g_EVKBackend->buffers, "Camera"));
+    evk_buffer_destroy(g_EVKBackend->evkDevice.device, (evkBuffer*)shashtable_lookup(g_EVKBackend->buffers, "MainCamera"));
     shashtable_destroy(g_EVKBackend->buffers);
 
-    evk_pipeline_quad_destroy(g_EVKBackend->pipelines, g_EVKBackend->evkDevice.device);
+    evk_pipeline_sprite_destroy(g_EVKBackend->pipelines, g_EVKBackend->evkDevice.device);
     shashtable_destroy(g_EVKBackend->pipelines);
 
     if (evk_using_viewport()) {
@@ -808,6 +812,18 @@ void evk_shutdown_backend()
 
 void evk_update_backend(float timestep, bool* mustResize)
 {
+    // first phase
+    evkCamera* mainCamera = evk_get_main_camera();
+    evk_camera_update(mainCamera, timestep);
+
+    evkCameraUBO mainCameraData = { 0 };
+    mainCameraData.view = evk_camera_get_view(mainCamera);
+    mainCameraData.viewInverse = evk_camera_get_view_inverse(mainCamera);
+    mainCameraData.proj = evk_camera_get_perspective(mainCamera);
+    evkBuffer* buffer = (evkBuffer*)shashtable_lookup(evk_get_buffers_library(), "MainCamera");
+    evk_buffer_copy(buffer, evk_get_current_frame(), &mainCameraData, sizeof(evkCameraUBO), 0);
+
+    // second phase
     vkWaitForFences(g_EVKBackend->evkDevice.device, 1, & g_EVKBackend->evkSync.framesInFlightFences[g_EVKBackend->evkSync.currentFrame], VK_TRUE, UINT64_MAX);
     VkResult res = vkAcquireNextImageKHR(g_EVKBackend->evkDevice.device, g_EVKBackend->evkSwapchain.swapchain, UINT64_MAX, g_EVKBackend->evkSync.imageAvailableSemaphores[g_EVKBackend->evkSync.currentFrame], VK_NULL_HANDLE, &g_EVKBackend->evkSwapchain.imageIndex);
 
@@ -825,11 +841,18 @@ void evk_update_backend(float timestep, bool* mustResize)
     vkResetFences(g_EVKBackend->evkDevice.device, 1, &g_EVKBackend->evkSync.framesInFlightFences[g_EVKBackend->evkSync.currentFrame]);
 
     // render phases
+    g_EVKBackend->currentRenderphase = evk_Renderphase_Type_Main;
     evk_renderphase_main_update(&g_EVKBackend->evkMainRenderphase, g_EVKBackend->evkDevice.device, timestep, g_EVKBackend->evkSync.currentFrame, g_EVKBackend->evkSwapchain.extent, g_EVKBackend->evkSwapchain.imageIndex, evk_using_viewport(), evk_get_render_callback());
+    
+    g_EVKBackend->currentRenderphase = evk_Renderphase_Type_Picking;
     evk_renderphase_picking_update(&g_EVKBackend->evkPickingRenderphase, g_EVKBackend->evkDevice.device, timestep, g_EVKBackend->evkSync.currentFrame, g_EVKBackend->evkSwapchain.extent, g_EVKBackend->evkSwapchain.imageIndex, evk_using_viewport(), evk_get_render_callback());
+    
     if (evk_using_viewport()) {
+        g_EVKBackend->currentRenderphase = evk_Renderphase_Type_Picking;
         evk_renderphase_viewport_update(&g_EVKBackend->evkViewportRenderphase, g_EVKBackend->evkDevice.device, timestep, g_EVKBackend->evkSync.currentFrame, g_EVKBackend->evkSwapchain.extent, g_EVKBackend->evkSwapchain.imageIndex, evk_using_viewport(), evk_get_render_callback());
     }
+
+    g_EVKBackend->currentRenderphase = evk_Renderphase_Type_UI;
     evk_renderphase_ui_update(&g_EVKBackend->evkUIRenderphase, g_EVKBackend->evkDevice.device, timestep, g_EVKBackend->evkSync.currentFrame, g_EVKBackend->evkSwapchain.extent, g_EVKBackend->evkSwapchain.imageIndex, evk_get_renderui_callback());
 
     // submit command buffers
@@ -1098,12 +1121,126 @@ uint32_t evk_pick_object_backend(float2 xy)
     return pixelValue;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Getter/Setter
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+VkInstance evk_get_instance()
+{
+    return g_EVKBackend->evkInstance.instance;
+}
+
+VkPhysicalDevice evk_get_physical_device()
+{
+    return g_EVKBackend->evkDevice.physicalDevice;
+}
+
+VkPhysicalDeviceProperties evk_get_physical_device_properties()
+{
+    return g_EVKBackend->evkDevice.physicalProps;
+}
+
+VkPhysicalDeviceFeatures evk_get_physical_device_features()
+{
+    return g_EVKBackend->evkDevice.phyiscalFeatures;
+}
+
+VkPhysicalDeviceMemoryProperties evk_get_physical_device_memory_properties()
+{
+    return g_EVKBackend->evkDevice.physicaMemProps;
+}
+
+VkDevice evk_get_device()
+{
+    return g_EVKBackend->evkDevice.device;
+}
+
 VkQueue evk_get_graphics_queue()
 {
-    EVK_ASSERT(g_EVKBackend != NULL, "EVK Backend is NULL");
-    EVK_ASSERT(g_EVKBackend->evkDevice.graphicsQueue != VK_NULL_HANDLE, "EVK Graphics queue is VK_NULL_HANDLE");
-
     return g_EVKBackend->evkDevice.graphicsQueue;
+}
+
+VkRenderPass evk_get_renderpass(evkRenderphaseType type)
+{
+    switch (type)
+    {
+        case evk_Renderphase_Type_Main: return g_EVKBackend->evkMainRenderphase.evkRenderpass.renderpass;
+        case evk_Renderphase_Type_Picking: return g_EVKBackend->evkPickingRenderphase.evkRenderpass.renderpass;
+        case evk_Renderphase_Type_UI: return g_EVKBackend->evkUIRenderphase.evkRenderpass.renderpass;
+        case evk_Renderphase_Type_Viewport:
+        {
+            if (!evk_using_viewport()) {
+                EVK_LOG(evk_Error, "Requesting viewport renderphase but viewport was not enabled");
+                return VK_NULL_HANDLE;
+            }
+
+            return g_EVKBackend->evkViewportRenderphase.evkRenderpass.renderpass;
+        }
+    }
+    return VK_NULL_HANDLE;
+}
+
+VkCommandPool evk_get_command_pool(evkRenderphaseType type)
+{
+    switch (type)
+    {
+        case evk_Renderphase_Type_Main: return g_EVKBackend->evkMainRenderphase.evkRenderpass.cmdPool;
+        case evk_Renderphase_Type_Picking: return g_EVKBackend->evkPickingRenderphase.evkRenderpass.cmdPool;
+        case evk_Renderphase_Type_UI: return g_EVKBackend->evkUIRenderphase.evkRenderpass.cmdPool;
+        case evk_Renderphase_Type_Viewport:
+        {
+            if (!evk_using_viewport()) {
+                EVK_LOG(evk_Error, "Requesting viewport command pool but viewport was not enabled");
+                return VK_NULL_HANDLE;
+            }
+
+            return g_EVKBackend->evkViewportRenderphase.evkRenderpass.cmdPool;
+        }
+    }
+    return VK_NULL_HANDLE;
+}
+
+VkDescriptorPool evk_get_ui_descriptor_pool()
+{
+    return g_EVKBackend->evkUIRenderphase.descriptorPool;
+}
+
+VkDescriptorSetLayout evk_get_ui_descriptor_set_layout()
+{
+    return g_EVKBackend->evkUIRenderphase.descriptorSetLayout;
+}
+
+void* evk_get_renderphase(evkRenderphaseType type)
+{
+    switch (type)
+    {
+        case evk_Renderphase_Type_Main: return &g_EVKBackend->evkMainRenderphase;
+        case evk_Renderphase_Type_Picking: return &g_EVKBackend->evkPickingRenderphase;
+        case evk_Renderphase_Type_UI: return &g_EVKBackend->evkUIRenderphase;
+        case evk_Renderphase_Type_Viewport: return &g_EVKBackend->evkViewportRenderphase;
+    }
+    EVK_LOG(evk_Fatal, "This renderphase (%d) is undefined", type);
+    return NULL;
+}
+
+shashtable* evk_get_pipelines_library()
+{
+    return g_EVKBackend->pipelines;
+}
+
+shashtable* evk_get_buffers_library()
+{
+    return g_EVKBackend->buffers;
+}
+
+uint32_t evk_get_current_frame()
+{
+    return g_EVKBackend->evkSync.currentFrame;
+}
+
+evkRenderphaseType evk_get_current_renderphase_type()
+{
+    return g_EVKBackend->currentRenderphase;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1287,6 +1424,71 @@ evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPo
     return evk_Success;
 }
 
+void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, int32_t width, int32_t height, int32_t mipLevels, VkImage image)
+{
+    if (mipLevels <= 1) return;
+
+    VkImageMemoryBarrier barrier = { 0 };
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.image = image;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.levelCount = 1;
+
+    int32_t mipWidth = width;
+    int32_t mipHeight = height;
+
+    for (int32_t i = 1; i < mipLevels; i++) {
+
+        // transition previous mip level to transfer source
+        barrier.subresourceRange.baseMipLevel = i - 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
+
+        // blit from previous level to current level
+        VkImageBlit blit = { 0 };
+        blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blit.srcSubresource.mipLevel = i - 1;
+        blit.srcSubresource.baseArrayLayer = 0;
+        blit.srcSubresource.layerCount = 1;
+        blit.srcOffsets[1].x = mipWidth;
+        blit.srcOffsets[1].y = mipHeight;
+        blit.srcOffsets[1].z = 1;
+        blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        blit.dstSubresource.mipLevel = i;
+        blit.dstSubresource.baseArrayLayer = 0;
+        blit.dstSubresource.layerCount = 1;
+        blit.dstOffsets[1].x = mipWidth > 1 ? mipWidth / 2 : 1;
+        blit.dstOffsets[1].y = mipHeight > 1 ? mipHeight / 2 : 1;
+        blit.dstOffsets[1].z = 1;
+        vkCmdBlitImage(cmdBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+
+        // transition previous level to shader read
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
+
+        if (mipWidth > 1) mipWidth /= 2;
+        if (mipHeight > 1) mipHeight /= 2;
+    }
+
+    // transition last mip level
+    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
+}
+
 void evk_device_create_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImage image, VkAccessFlags srcAccessFlags, VkAccessFlags dstAccessFlags, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageSubresourceRange subresourceRange)
 {
     VkImageMemoryBarrier imageMemoryBarrier = { 0 };
@@ -1340,6 +1542,60 @@ VkFormat evk_device_find_depth_format(VkPhysicalDevice physicalDevice)
     return format;
 }
 
+evkResult evk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize size, VkBuffer* buffer, VkDeviceMemory* memory, void* data)
+{
+    VkBufferCreateInfo bufferCI = { 0 };
+    bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferCI.size = size;
+    bufferCI.usage = usage;
+    bufferCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkResult res = vkCreateBuffer(device, &bufferCI, NULL, buffer);
+    if (res != VK_SUCCESS) {
+        EVK_LOG(evk_Error, "Failed to create buffer on GPU");
+        return evk_Failure;
+    }
+
+    VkMemoryRequirements memRequirements = { 0 };
+    vkGetBufferMemoryRequirements(device, *buffer, &memRequirements);
+
+    // allocate memory for the buffer and bind it
+    VkMemoryAllocateInfo allocInfo = { 0 };
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = evk_device_find_suitable_memory_type(physicalDevice, memRequirements.memoryTypeBits, properties);
+
+    res = vkAllocateMemory(device, &allocInfo, NULL, memory);
+    if (res != VK_SUCCESS) {
+        EVK_LOG(evk_Error, "Failed to allocate memory for GPU buffer");
+        vkDestroyBuffer(device, *buffer, NULL);
+        return evk_Failure;
+    }
+
+    res = vkBindBufferMemory(device, *buffer, *memory, 0);
+    if (res != VK_SUCCESS) {
+        EVK_LOG(evk_Error, "Failed to bind GPU memory with buffer");
+        vkDestroyBuffer(device, *buffer, NULL);
+        vkFreeMemory(device, *memory, NULL);
+        return evk_Failure;
+    }
+
+    // map data if passing it
+    if (data != NULL) {
+        void* mapped;
+        res = vkMapMemory(device, *memory, 0, size, 0, &mapped);
+        if (res == VK_SUCCESS) {
+            memcpy(mapped, data, size);
+            vkUnmapMemory(device, *memory);
+        }
+
+        else {
+            EVK_LOG(evk_Error, "Failed to map memory for data upload (VkResult: %d)", res);
+        }
+    }
+    return evk_Success;
+}
+
 VkCommandBuffer evk_device_begin_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool)
 {
     VkCommandBufferAllocateInfo cmdBufferAllocInfo = { 0 };
@@ -1388,6 +1644,12 @@ evkResult evk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool
 
     vkFreeCommandBuffers(device, cmdPool, 1, &cmdBuffer);
     return evk_Success;
+}
+
+int32_t evk_device_calculate_image_mipmap(uint32_t width, uint32_t height, bool uiImage)
+{
+    if (uiImage || evk_get_msaa() != evk_Msaa_Off) return 1; // UI textures or MSAA textures cannot have mipmaps
+    return i_floor(f_log2(f_max((float)width, (float)height))) + 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

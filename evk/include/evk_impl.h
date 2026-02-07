@@ -28,6 +28,9 @@
 #define VOLK_IMPLEMENTATION
 #include "volk/volk.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
 #define VECMATH_IMPLEMENTATION
 #include "vecmath/vecmath.h"
 
@@ -56,7 +59,9 @@ struct evkContext
     bool hint_vsync;
     bool hint_resize;
 
+    evkCamera* mainCamera;
     idgen* idgen;
+    evkMSAA msaa;
 
     float2 viewportSize;
     float2 framebufferSize;
@@ -120,7 +125,9 @@ evkResult evk_init(const evkCreateInfo* ci)
     g_EVKContext->hint_minimized = false;
     g_EVKContext->hint_vsync = ci->vsync;
     g_EVKContext->hint_resize = false;
+    g_EVKContext->msaa = ci->MSAA;
     g_EVKContext->idgen = idgen_create(1);
+    g_EVKContext->mainCamera = evk_camera_create((float)(ci->width / ci->height));
 
     // vulkan initialization
     evkResult res = evk_initialize_backend(ci);
@@ -132,6 +139,7 @@ evkResult evk_shutdown()
 {
     evk_shutdown_backend();
     idgen_destroy(g_EVKContext->idgen);
+    evk_camera_destroy(g_EVKContext->mainCamera);
 
     m_free(g_EVKContext);
     memm_print_leaks();
@@ -157,6 +165,11 @@ evkContext* evk_get_context()
     return g_EVKContext;
 }
 
+evkCamera* evk_get_main_camera()
+{
+    return g_EVKContext != NULL ? g_EVKContext->mainCamera : NULL;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Getters/Setters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +184,12 @@ bool evk_using_viewport()
 {
     if (!g_EVKContext) return false;
     return g_EVKContext->hint_viewport;
+}
+
+evkMSAA evk_get_msaa()
+{
+    if (!g_EVKContext) return evk_Msaa_Off;
+    return g_EVKContext->msaa;
 }
 
 float2 evk_get_viewport_size()
@@ -473,7 +492,7 @@ void evk_camera_rotate(evkCamera* camera, float3 dir)
     ievk_camera_update_view_matrix(camera);
 }
 
- fmat4 evk_camera_get_view(evkCamera* camera)
+fmat4 evk_camera_get_view(evkCamera* camera)
 {
     if (!camera) return fmat4_identity();
     return camera->view;

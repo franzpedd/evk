@@ -3,6 +3,8 @@
 
 #include "evk_types.h"
 
+// @HEADER_ONLY_GENERATOR_START
+
 #ifdef __cplusplus 
 extern "C" {
 #endif
@@ -26,6 +28,9 @@ uint32_t evk_pick_object(float2 xy);
 /// @brief returns the global context, used for external functions
 evkContext* evk_get_context();
 
+/// @brief returns the main camera, object created to facilitate usage of the api
+evkCamera* evk_get_main_camera();
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Getters/Setters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,6 +40,9 @@ bool evk_using_vsync();
 
 /// @brief returns if evk was created with a viewport enabled
 bool evk_using_viewport();
+
+/// @brief returns the msaa used at the momment
+evkMSAA evk_get_msaa();
 
 /// @brief if using viewport, returns it's size
 float2 evk_get_viewport_size();
@@ -153,8 +161,10 @@ float3 evk_camera_get_front(evkCamera* camera);
 
 #endif // EVK_INCLUDED
 
+// @HEADER_ONLY_GENERATOR_END
+
 /// @brief prevents circular dependency
 #ifdef EVK_IMPLEMENTATION
 #undef EVK_IMPLEMENTATION
-#include "evk.c"
+#include "evk_impl.h"
 #endif
