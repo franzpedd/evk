@@ -1,0 +1,24 @@
+# paths
+.vscode
+build/.vs
+build/ALL_BUILD.dir
+build/CMakeFiles
+build/EVK_D.dir
+build/EVK_S.dir
+build/x64
+build/ZERO_CHECK.dir
+
+# extensions
+*.exe
+*.spv
+*.sln
+*.slnx
+*.cmake
+*.vcxproj
+*.filters
+*.user
+*.exp
+*.pdb
+
+# files
+build/CMakeCache.txt
