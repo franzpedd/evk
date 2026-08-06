@@ -293,7 +293,7 @@ static void fwrite_evk(const char* output) {
 int main()
 {
     // copy thirdparty structure
-    copy_thirdparty("../../thirdparty", "../../build/headeronly/thirdparty");
+    //copy_thirdparty("../../thirdparty", "../../build/headeronly/thirdparty");
 
     // generate project
     fwrite_vecmath("../../build/headeronly/vecmath.h");
