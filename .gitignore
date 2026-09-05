@@ -5,6 +5,7 @@ build/ALL_BUILD.dir
 build/CMakeFiles
 build/EVK_D.dir
 build/EVK_S.dir
+build/shader
 build/x64
 build/ZERO_CHECK.dir
 

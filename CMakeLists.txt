@@ -28,10 +28,11 @@ else()
     set(ARCH_NAME "x86")
 endif()
 
-# output folder hierarchy: build/<platform>-<arch>/(dynamic|static)
+# output folder hierarchy: build/<platform>-<arch>/(dynamic|static|include)
 set(PLATFORM_DIR "${PLATFORM_NAME}-${ARCH_NAME}")
 set(DYNAMIC_OUTPUT_DIR "${CMAKE_BINARY_DIR}/${PLATFORM_DIR}/dynamic")
 set(STATIC_OUTPUT_DIR  "${CMAKE_BINARY_DIR}/${PLATFORM_DIR}/static")
+set(INCLUDE_OUTPUT_DIR "${CMAKE_BINARY_DIR}//include")
 
 # project macro options
 option(EVK_ENABLE_VALIDATIONS "Enable API and Vulkan log information about info, warnings and errors" ON)
@@ -101,6 +102,51 @@ set(HEADERS
     evk/evk.h
 )
 
+# project thirdparty files, for compiling ship
+set(THIRDPARTY_FILES
+    # stb
+    thirdparty/stb/license
+    thirdparty/stb/stb_image.h
+    # vk_video
+    thirdparty/vk_video/vulkan_video_codec_av1std_decode.h
+    thirdparty/vk_video/vulkan_video_codec_av1std_encode.h
+    thirdparty/vk_video/vulkan_video_codec_av1std.h
+    thirdparty/vk_video/vulkan_video_codec_h264std_decode.h
+    thirdparty/vk_video/vulkan_video_codec_h264std_encode.h
+    thirdparty/vk_video/vulkan_video_codec_h264std.h
+    thirdparty/vk_video/vulkan_video_codec_h265std_decode.h
+    thirdparty/vk_video/vulkan_video_codec_h265std_encode.h
+    thirdparty/vk_video/vulkan_video_codec_h265std.h
+    thirdparty/vk_video/vulkan_video_codec_vp9std_decode.h
+    thirdparty/vk_video/vulkan_video_codec_vp9std.h
+    thirdparty/vk_video/vulkan_video_codecs_common.h
+    # volk
+    thirdparty/volk/license
+    thirdparty/volk/volk.c
+    thirdparty/volk/volk.h
+    # vulkan
+    thirdparty/vulkan/vk_icd.h
+    thirdparty/vulkan/vk_layer.h
+    thirdparty/vulkan/vk_platform.h
+    thirdparty/vulkan/vulkan_beta.h
+    thirdparty/vulkan/vulkan_core.h
+    thirdparty/vulkan/vulkan_directfb.h
+    thirdparty/vulkan/vulkan_fuchsia.h
+    thirdparty/vulkan/vulkan_ggp.h
+    thirdparty/vulkan/vulkan_ios.h
+    thirdparty/vulkan/vulkan_macos.h
+    thirdparty/vulkan/vulkan_metal.h
+    thirdparty/vulkan/vulkan_ohos.h
+    thirdparty/vulkan/vulkan_screen.h
+    thirdparty/vulkan/vulkan_vi.h
+    thirdparty/vulkan/vulkan_wayland.h
+    thirdparty/vulkan/vulkan_win32.h
+    thirdparty/vulkan/vulkan_xcb.h
+    thirdparty/vulkan/vulkan_xlib_xrandr.h
+    thirdparty/vulkan/vulkan_xlib.h
+    thirdparty/vulkan/vulkan.h
+)
+
 # preserve disk directory structure in visual studio filters
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 
@@ -115,12 +161,9 @@ set_target_properties(EVK_D PROPERTIES
     OUTPUT_NAME evk 
     VERSION ${PROJECT_VERSION} 
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    # Binaries (.dll / .so)
     RUNTIME_OUTPUT_DIRECTORY "${DYNAMIC_OUTPUT_DIR}"
     LIBRARY_OUTPUT_DIRECTORY "${DYNAMIC_OUTPUT_DIR}"
-    # Windows DLL import library (.lib)
     ARCHIVE_OUTPUT_DIRECTORY "${DYNAMIC_OUTPUT_DIR}"
-    # Windows DLL debug symbols (.pdb)
     PDB_OUTPUT_DIRECTORY     "${DYNAMIC_OUTPUT_DIR}"
 )
 
@@ -143,9 +186,7 @@ target_compile_definitions(EVK_S PUBLIC EVK_STATIC)
 set_target_properties(EVK_S PROPERTIES 
     OUTPUT_NAME evk 
     CLEAN_DIRECT_OUTPUT 1
-    # Static libraries (.a on Linux, .lib on Windows)
     ARCHIVE_OUTPUT_DIRECTORY     "${STATIC_OUTPUT_DIR}"
-    # Compiler-generated PDB symbols for static build
     COMPILE_PDB_OUTPUT_DIRECTORY "${STATIC_OUTPUT_DIR}"
 )
 
@@ -158,3 +199,33 @@ endif()
 if(MSVC)
     set_target_properties(EVK_S PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:EVK_S>")
 endif()
+
+# create the include directory
+file(MAKE_DIRECTORY ${INCLUDE_OUTPUT_DIR})
+
+# copy headers while preserving directory structure
+function(copy_files HEADER_LIST TARGET_DIR)
+    foreach(HEADER ${HEADER_LIST})
+        get_filename_component(HEADER_DIR ${HEADER} DIRECTORY)
+        
+        if(HEADER_DIR)
+            set(DEST_DIR "${TARGET_DIR}/${HEADER_DIR}")
+        else()
+            set(DEST_DIR "${TARGET_DIR}")
+        endif()
+        
+        file(MAKE_DIRECTORY ${DEST_DIR})
+        
+        set(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${HEADER}")
+        set(DEST_FILE "${TARGET_DIR}/${HEADER}")
+        
+        add_custom_command(
+            TARGET EVK_D EVK_S POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SOURCE_FILE}" "${DEST_FILE}"
+        )
+    endforeach()
+endfunction()
+
+# copy all headers
+copy_files("${HEADERS}" "${INCLUDE_OUTPUT_DIR}")
+copy_files("${THIRDPARTY_FILES}" "${INCLUDE_OUTPUT_DIR}")
