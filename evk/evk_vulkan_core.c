@@ -1447,8 +1447,8 @@ EVK_API evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDesc
         return evk_Failure;
     }
 
-    VkDescriptorImageInfo descImage[1];
-    memset(&descImage, 0, sizeof(VkDescriptorImageInfo) * 2);
+    VkDescriptorImageInfo descImage[1] = { 0 };
+    memset(descImage, 0, sizeof(VkDescriptorImageInfo));
     descImage[0].imageView = view;
     descImage[0].imageLayout = layout;
     
