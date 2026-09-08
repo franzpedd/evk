@@ -810,6 +810,7 @@ EVK_API evkSprite* evk_sprite_create_from_path(const char* path, uint32_t id) {
         }
        
         VkDescriptorPoolSize poolSizes[3];
+        memset(poolSizes, 0, sizeof(VkDescriptorPoolSize));
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = EVK_CONCURRENTLY_RENDERED_FRAMES;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -830,6 +831,7 @@ EVK_API evkSprite* evk_sprite_create_from_path(const char* path, uint32_t id) {
         }
 
         VkDescriptorSetLayout layouts[EVK_CONCURRENTLY_RENDERED_FRAMES];
+        memset(layouts, 0, sizeof(VkDescriptorSetLayout));
 
         for (uint32_t i = 0; i < EVK_CONCURRENTLY_RENDERED_FRAMES; i++) {
             layouts[i] = pipeline->descriptorSetLayout;
@@ -1148,7 +1150,7 @@ static void ievk_billboard_refresh_data(evkBillboard* billboard)
 
 EVK_API evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t id) {
     if (path == NULL) {
-        EVK_LOG(evk_Error, "Sprite path is NULL");
+        EVK_LOG(evk_Error, "Billboard path is NULL");
         return NULL;
     }
 
@@ -1229,11 +1231,12 @@ EVK_API evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t 
         evkPipeline* pipeline = (evkPipeline*)shashtable_lookup(evk_get_pipelines_library(), EVK_PIPELINE_SPRITE_DEFAULT_NAME);
 
         if (!pipeline) {
-            EVK_LOG(evk_Error, "Failed to find sprite pipeline");
+            EVK_LOG(evk_Error, "Failed to find billboard pipeline");
             break;
         }
 
         VkDescriptorPoolSize poolSizes[3];
+        memset(poolSizes, 0, sizeof(VkDescriptorPoolSize));
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = EVK_CONCURRENTLY_RENDERED_FRAMES;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1254,6 +1257,7 @@ EVK_API evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t 
         }
 
         VkDescriptorSetLayout layouts[EVK_CONCURRENTLY_RENDERED_FRAMES];
+        memset(layouts, 0, sizeof(VkDescriptorSetLayout));
 
         for (uint32_t i = 0; i < EVK_CONCURRENTLY_RENDERED_FRAMES; i++) {
             layouts[i] = pipeline->descriptorSetLayout;
@@ -1382,6 +1386,40 @@ EVK_API void evk_billboard_render(evkBillboard* billboard) {
     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &billboard->descriptorSets[currentFrame], 0, NULL);
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
     vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
+}
+
+EVK_API evkTexture2D* evk_billboard_get_albedo(evkBillboard* billboard)
+{
+    if (!billboard) return NULL;
+    return billboard->albedo;
+}
+
+EVK_API void evk_billboard_set_albedo(evkBillboard* billboard, const char* path)
+{
+    if (billboard == NULL) {
+        EVK_LOG(evk_Error, "Sprite is NULL");
+        return;
+    }
+
+    if (path == NULL) {
+        EVK_LOG(evk_Error, "Sprite path is NULL");
+        return;
+    }
+
+    evkTexture2D* newTexture = evk_texture2d_create_from_path(path, false);
+    if (!newTexture) {
+        EVK_LOG(evk_Error, "Failed to load albedo texture for billboard: %s because: %s", path, evk_stb_failure_reason());
+        return;
+    }
+
+    if (billboard->albedo) {
+        evk_texture2d_destroy(billboard->albedo);
+    }
+
+    billboard->albedo = newTexture;
+
+    ievk_billboard_refresh_data(billboard);
+    ievk_billboard_refresh_modelmatrix(billboard);
 }
 
 EVK_API uint32_t evk_billboard_get_id(evkBillboard* billboard) {

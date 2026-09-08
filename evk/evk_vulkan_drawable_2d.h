@@ -132,6 +132,12 @@ EVK_API void evk_billboard_update(evkBillboard* billboard, bool resend);
 /// @brief renders the billboard
 EVK_API void evk_billboard_render(evkBillboard* billboard);
 
+/// @brief returns the albedo's texture
+EVK_API evkTexture2D* evk_billboard_get_albedo(evkBillboard* billboard);
+
+/// @brief sets a new albedo for the texture
+EVK_API void evk_billboard_set_albedo(evkBillboard* billboard, const char* path);
+
 /// @brief returns the billboard's id
 EVK_API uint32_t evk_billboard_get_id(evkBillboard* billboard);
 
