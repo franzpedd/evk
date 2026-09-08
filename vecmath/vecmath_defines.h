@@ -34,17 +34,10 @@
 
 #if defined(VECMATH_HEADER_ONLY)
     #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-        #define VECMATH_FUNC static inline
+        #define VECMATH_API static inline
     #else
-        #define VECMATH_FUNC static  // fallback for C89
+        #define VECMATH_API static  // fallback for C89
     #endif
-    #undef VECMATH_API
-    #define VECMATH_API
-    
-#elif defined(VECMATH_SHARED)
-    #define VECMATH_FUNC
-#else
-    #define VECMATH_FUNC
 #endif // VECMATH_HEADER_ONLY
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

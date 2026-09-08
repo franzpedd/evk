@@ -25,7 +25,7 @@ extern "C" {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief creates an array of VkVertexInputBindingDescription based on parameters
-static EVK_FUNC VkVertexInputBindingDescription* ievk_pipeline_get_binding_descriptions(bool passingVertexData, uint32_t* bindingCount) {
+static VkVertexInputBindingDescription* ievk_pipeline_get_binding_descriptions(bool passingVertexData, uint32_t* bindingCount) {
     if (!passingVertexData) {
         *bindingCount = 0U;
         return NULL;
@@ -41,7 +41,7 @@ static EVK_FUNC VkVertexInputBindingDescription* ievk_pipeline_get_binding_descr
 }
 
 /// @brief creates an array of VkVertexInputAttributeDescription
-static EVK_FUNC VkVertexInputAttributeDescription* ievk_pipeline_get_attribute_descriptions(evkVertexComponent* vertexComponents, uint32_t componentsCount, uint32_t* attributesCount) {
+static VkVertexInputAttributeDescription* ievk_pipeline_get_attribute_descriptions(evkVertexComponent* vertexComponents, uint32_t componentsCount, uint32_t* attributesCount) {
 	VkVertexInputAttributeDescription* bindings = (VkVertexInputAttributeDescription*)m_malloc(sizeof(VkVertexInputAttributeDescription) * componentsCount);
 
 	for (uint32_t i = 0; i < componentsCount; i++) {
@@ -103,7 +103,7 @@ static EVK_FUNC VkVertexInputAttributeDescription* ievk_pipeline_get_attribute_d
 }
 
 /// @brief populates the vertex input state pipeline structure
-static EVK_FUNC VkPipelineVertexInputStateCreateInfo ievk_pipeline_populate_visci(evkPipeline* pipeline, evkVertexComponent* vertexComponents, uint32_t componentsCount) {
+static VkPipelineVertexInputStateCreateInfo ievk_pipeline_populate_visci(evkPipeline* pipeline, evkVertexComponent* vertexComponents, uint32_t componentsCount) {
 	pipeline->bindingsDescription = ievk_pipeline_get_binding_descriptions(pipeline->passingVertexData, &pipeline->bindingsDescriptionCount);
 	pipeline->attributesDescription = ievk_pipeline_get_attribute_descriptions(vertexComponents, componentsCount, &pipeline->attributesDescriptionCount);
 
@@ -120,7 +120,7 @@ static EVK_FUNC VkPipelineVertexInputStateCreateInfo ievk_pipeline_populate_visc
 }
 
 /// @brief creates and returns a pipeline
-static EVK_FUNC evkResult ievk_pipeline_create(VkDevice device, evkPipelineCreateInfo* ci, evkPipeline* outPipe) {
+static evkResult ievk_pipeline_create(VkDevice device, evkPipelineCreateInfo* ci, evkPipeline* outPipe) {
 	EVK_ASSERT(device != VK_NULL_HANDLE, "device is NULL");
 	EVK_ASSERT(ci != NULL, "ci is NULL");
 	EVK_ASSERT(outPipe != NULL, "outPipe is NULL");
@@ -225,7 +225,7 @@ static EVK_FUNC evkResult ievk_pipeline_create(VkDevice device, evkPipelineCreat
 }
 
 /// @brief releases all resources used by a pipeline
-static EVK_FUNC void ievk_pipeline_destroy(VkDevice device, evkPipeline* pipeline) {
+static void ievk_pipeline_destroy(VkDevice device, evkPipeline* pipeline) {
 	if (!pipeline || device == VK_NULL_HANDLE) return;
 
 	vkDeviceWaitIdle(device);
@@ -244,7 +244,7 @@ static EVK_FUNC void ievk_pipeline_destroy(VkDevice device, evkPipeline* pipelin
 }
 
 /// @brief builds a pipeline, must be previously configured as desired
-static EVK_FUNC evkResult ievk_pipeline_build(VkDevice device, evkPipeline* pipeline) {
+static evkResult ievk_pipeline_build(VkDevice device, evkPipeline* pipeline) {
 	// dynamic state is here because dynamic states must be constant
 	VkPipelineDynamicStateCreateInfo dynamicState;
     memset(&dynamicState, 0, sizeof(VkPipelineDynamicStateCreateInfo));
@@ -284,7 +284,7 @@ static EVK_FUNC evkResult ievk_pipeline_build(VkDevice device, evkPipeline* pipe
 }
 
 /// @brief creates a shader program based on a pre-compiled spirv on disk
-static EVK_FUNC evkShader ievk_pipeline_create_shader(VkDevice device, const char* name, const uint32_t* spirv, size_t spirvSize, evkShaderType type) {
+static evkShader ievk_pipeline_create_shader(VkDevice device, const char* name, const uint32_t* spirv, size_t spirvSize, evkShaderType type) {
 	evkShader shader = { 0 };
 	shader.name = name;
 	shader.type = type;
@@ -320,7 +320,7 @@ static EVK_FUNC evkShader ievk_pipeline_create_shader(VkDevice device, const cha
 // pipelines
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkResult evk_pipeline_sprite_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device) {
+EVK_API evkResult evk_pipeline_sprite_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device) {
 	// default pipeline
 	evkPipeline* defaultPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_DEFAULT_NAME);
 	if (defaultPipeline != NULL) ievk_pipeline_destroy(device, defaultPipeline);
@@ -422,7 +422,7 @@ EVK_FUNC evkResult evk_pipeline_sprite_create(shashtable* pipelines, evkRenderpa
 	return evk_Success;
 }
 
-EVK_FUNC void evk_pipeline_sprite_destroy(shashtable* pipelines, VkDevice device) {
+EVK_API void evk_pipeline_sprite_destroy(shashtable* pipelines, VkDevice device) {
 	evkPipeline* pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_SPRITE_DEFAULT_NAME);
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 
@@ -430,7 +430,7 @@ EVK_FUNC void evk_pipeline_sprite_destroy(shashtable* pipelines, VkDevice device
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 }
 
-EVK_FUNC evkResult evk_pipeline_billboard_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device) {
+EVK_API evkResult evk_pipeline_billboard_create(shashtable* pipelines, evkRenderpass* renderpass, evkRenderpass* pickingRenderpass, VkDevice device) {
 	// default pipeline
 	evkPipeline* defaultPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_BILLBOARD_DEFAULT_NAME);
 	if (defaultPipeline != NULL) ievk_pipeline_destroy(device, defaultPipeline);
@@ -530,7 +530,7 @@ EVK_FUNC evkResult evk_pipeline_billboard_create(shashtable* pipelines, evkRende
 	return evk_Success;
 }
 
-EVK_FUNC void evk_pipeline_billboard_destroy(shashtable* pipelines, VkDevice device) {
+EVK_API void evk_pipeline_billboard_destroy(shashtable* pipelines, VkDevice device) {
 	evkPipeline* pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_BILLBOARD_DEFAULT_NAME);
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 
@@ -538,7 +538,7 @@ EVK_FUNC void evk_pipeline_billboard_destroy(shashtable* pipelines, VkDevice dev
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 }
 
-EVK_FUNC evkResult evk_pipeline_grid_create(shashtable* pipelines, evkRenderpass* renderpass, VkDevice device) {
+EVK_API evkResult evk_pipeline_grid_create(shashtable* pipelines, evkRenderpass* renderpass, VkDevice device) {
 	// default pipeline
 	evkPipeline* defaultPipeline = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_GRID_DEFAULT_NAME);
 	if (defaultPipeline != NULL) ievk_pipeline_destroy(device, defaultPipeline);
@@ -575,7 +575,7 @@ EVK_FUNC evkResult evk_pipeline_grid_create(shashtable* pipelines, evkRenderpass
 	return evk_Success;
 }
 
-EVK_FUNC void evk_pipeline_grid_destroy(shashtable* pipelines, VkDevice device) {
+EVK_API void evk_pipeline_grid_destroy(shashtable* pipelines, VkDevice device) {
 	evkPipeline* pipe = (evkPipeline*)shashtable_lookup(pipelines, EVK_PIPELINE_GRID_DEFAULT_NAME);
 	if (pipe != NULL) ievk_pipeline_destroy(device, pipe);
 }
@@ -584,7 +584,7 @@ EVK_FUNC void evk_pipeline_grid_destroy(shashtable* pipelines, VkDevice device) 
 // main render-phase
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkMainRenderphase evk_renderphase_main_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, evkMSAA msaa, bool finalPhase) {
+EVK_API evkMainRenderphase evk_renderphase_main_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, evkMSAA msaa, bool finalPhase) {
 	evkMainRenderphase renderphase = { 0 };
 	memset(&renderphase.evkRenderpass, 0, sizeof(evkRenderpass));
 	renderphase.evkRenderpass.name = "Main";
@@ -682,7 +682,7 @@ EVK_FUNC evkMainRenderphase evk_renderphase_main_create(VkDevice device, VkPhysi
     return renderphase;
 }
 
-EVK_FUNC void evk_renderphase_main_destroy(evkMainRenderphase* renderphase, VkDevice device) {
+EVK_API void evk_renderphase_main_destroy(evkMainRenderphase* renderphase, VkDevice device) {
 	vkDeviceWaitIdle(device);
 
 	// renderpass
@@ -717,7 +717,7 @@ EVK_FUNC void evk_renderphase_main_destroy(evkMainRenderphase* renderphase, VkDe
 	memset(renderphase, 0, sizeof(evkMainRenderphase));
 }
 
-EVK_FUNC evkResult evk_renderphase_main_create_framebuffers(evkMainRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
+EVK_API evkResult evk_renderphase_main_create_framebuffers(evkMainRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
 	// uppon a resize event, the framebuffers and it's images must be recreated, therefore we must check if they were created already
 	if (renderphase->depthView != VK_NULL_HANDLE) vkDestroyImageView(device, renderphase->depthView, NULL);
 	if (renderphase->depthImage != VK_NULL_HANDLE) vkDestroyImage(device, renderphase->depthImage, NULL);
@@ -844,7 +844,7 @@ EVK_FUNC evkResult evk_renderphase_main_create_framebuffers(evkMainRenderphase* 
 	return evk_Success;
 }
 
-EVK_FUNC void evk_renderphase_main_update(evkMainRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
+EVK_API void evk_renderphase_main_update(evkMainRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
 	VkClearValue clearValues[2] = { 0 };
 	const uint32_t clearValuesCount = 2;
 	clearValues[0].color.float32[0] = 0.0f;
@@ -913,7 +913,7 @@ EVK_FUNC void evk_renderphase_main_update(evkMainRenderphase* renderphase, VkDev
 // picking render-phase
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkPickingRenderphase evk_renderphase_picking_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, evkMSAA msaa) {
+EVK_API evkPickingRenderphase evk_renderphase_picking_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, evkMSAA msaa) {
 	EVK_LOG(evk_Todo, "Implement MSAA on picking?");
 
 	evkPickingRenderphase renderphase;
@@ -1025,7 +1025,7 @@ EVK_FUNC evkPickingRenderphase evk_renderphase_picking_create(VkDevice device, V
 	return renderphase;
 }
 
-EVK_FUNC void evk_renderphase_picking_destroy(evkPickingRenderphase* renderphase, VkDevice device) {
+EVK_API void evk_renderphase_picking_destroy(evkPickingRenderphase* renderphase, VkDevice device) {
 	vkDeviceWaitIdle(device);
 
 	// renderpass
@@ -1060,7 +1060,7 @@ EVK_FUNC void evk_renderphase_picking_destroy(evkPickingRenderphase* renderphase
 	memset(renderphase, 0, sizeof(evkPickingRenderphase));
 }
 
-EVK_FUNC evkResult evk_renderphase_picking_create_framebuffers(evkPickingRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent) {
+EVK_API evkResult evk_renderphase_picking_create_framebuffers(evkPickingRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent) {
 	// uppon a resize event, the framebuffers and it's images must be recreated, therefore we must check if they were created already
 	if (renderphase->depthView != VK_NULL_HANDLE) vkDestroyImageView(device, renderphase->depthView, NULL);
 	if (renderphase->depthImage != VK_NULL_HANDLE) vkDestroyImage(device, renderphase->depthImage, NULL);
@@ -1187,7 +1187,7 @@ EVK_FUNC evkResult evk_renderphase_picking_create_framebuffers(evkPickingRenderp
 	return evk_Success;
 }
 
-EVK_FUNC void evk_renderphase_picking_update(evkPickingRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
+EVK_API void evk_renderphase_picking_update(evkPickingRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
     VkClearValue clearValues[2];
     memset(clearValues, 0, sizeof(VkClearValue) * 2);
     const uint32_t clearValuesCount = 2;
@@ -1255,7 +1255,7 @@ EVK_FUNC void evk_renderphase_picking_update(evkPickingRenderphase* renderphase,
 // ui render-phase
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkUIRenderphase evk_renderphase_ui_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, bool finalPhase) {
+EVK_API evkUIRenderphase evk_renderphase_ui_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, bool finalPhase) {
 	evkUIRenderphase renderphase;
     memset(&renderphase, 0, sizeof(evkUIRenderphase));
 	renderphase.evkRenderpass.name = "UI";
@@ -1321,24 +1321,10 @@ EVK_FUNC evkUIRenderphase evk_renderphase_ui_create(VkDevice device, VkPhysicalD
 	cmdBufferAllocInfo.commandBufferCount = EVK_CONCURRENTLY_RENDERED_FRAMES;
 	EVK_ASSERT(vkAllocateCommandBuffers(device, &cmdBufferAllocInfo, renderphase.evkRenderpass.cmdBuffers) == VK_SUCCESS, "Failed to allocate ui render phase command buffers");
 
-	// descriptor pool and descriptor set layout for UI image of things
-	VkDescriptorSetLayoutBinding binding[1];
-    memset(binding, 0, sizeof(VkDescriptorSetLayoutBinding));
-	binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	binding[0].descriptorCount = 1;
-	binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	VkDescriptorSetLayoutCreateInfo descInfo;
-    memset(&descInfo, 0, sizeof(VkDescriptorSetLayoutCreateInfo));
-	descInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	descInfo.bindingCount = 1;
-	descInfo.pBindings = binding;
-	EVK_ASSERT(vkCreateDescriptorSetLayout(device, &descInfo, NULL, &renderphase.descriptorSetLayout) == VK_SUCCESS, "Failed to create the ui render phase descriptor set layout");
-
 	return renderphase;
 }
 
-EVK_FUNC void evk_renderphase_ui_destroy(evkUIRenderphase* renderphase, VkDevice device) {
+EVK_API void evk_renderphase_ui_destroy(evkUIRenderphase* renderphase, VkDevice device) {
 	vkDeviceWaitIdle(device);
 
 	// renderpass
@@ -1361,13 +1347,10 @@ EVK_FUNC void evk_renderphase_ui_destroy(evkUIRenderphase* renderphase, VkDevice
 	m_free(renderphase->evkRenderpass.framebuffers);
 	memset(&renderphase->evkRenderpass, 0, sizeof(evkRenderpass));
 
-	// general
-	vkDestroyDescriptorSetLayout(device, renderphase->descriptorSetLayout, NULL);
-
 	memset(renderphase, 0, sizeof(evkUIRenderphase));
 }
 
-EVK_FUNC evkResult evk_renderphase_ui_create_framebuffers(evkUIRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
+EVK_API evkResult evk_renderphase_ui_create_framebuffers(evkUIRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
 	if (renderphase->evkRenderpass.framebuffers != NULL) {
 		for (uint32_t i = 0; i < renderphase->evkRenderpass.framebufferCount; i++) {
 			vkDestroyFramebuffer(device, renderphase->evkRenderpass.framebuffers[i], NULL);
@@ -1404,7 +1387,7 @@ EVK_FUNC evkResult evk_renderphase_ui_create_framebuffers(evkUIRenderphase* rend
 	return evk_Success;
 }
 
-EVK_FUNC void evk_renderphase_ui_update(evkUIRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, evkCalllback_RenderUI callback) {
+EVK_API void evk_renderphase_ui_update(evkUIRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, evkCalllback_RenderUI callback) {
 	VkCommandBuffer cmdBuffer = renderphase->evkRenderpass.cmdBuffers[currentFrame];
 	VkFramebuffer frameBuffer = renderphase->evkRenderpass.framebuffers[swapchainImageIndex];
 	VkRenderPass renderPass = renderphase->evkRenderpass.renderpass;
@@ -1440,7 +1423,7 @@ EVK_FUNC void evk_renderphase_ui_update(evkUIRenderphase* renderphase, VkDevice 
 	EVK_ASSERT(vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS, "Failed to end ui renderphase command buffer");
 }
 
-EVK_FUNC evkViewportRenderphase evk_renderphase_viewport_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, evkMSAA msaa) {
+EVK_API evkViewportRenderphase evk_renderphase_viewport_create(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkFormat format, evkMSAA msaa) {
 	evkViewportRenderphase renderphase;
     memset(&renderphase, 0, sizeof(evkViewportRenderphase));
 	renderphase.evkRenderpass.name = "Viewport";
@@ -1538,7 +1521,7 @@ EVK_FUNC evkViewportRenderphase evk_renderphase_viewport_create(VkDevice device,
 	return renderphase;
 }
 
-EVK_FUNC void evk_renderphase_viewport_destroy(evkViewportRenderphase* renderphase, VkDevice device) {
+EVK_API void evk_renderphase_viewport_destroy(evkViewportRenderphase* renderphase, VkDevice device) {
 	vkDeviceWaitIdle(device);
 
 	// renderpass
@@ -1564,7 +1547,8 @@ EVK_FUNC void evk_renderphase_viewport_destroy(evkViewportRenderphase* renderpha
 	// general
 	vkDestroySampler(device, renderphase->sampler, NULL);
 	vkDestroyDescriptorPool(device, renderphase->descriptorPool, NULL);
-	vkDestroyDescriptorSetLayout(device, renderphase->descriptorSetLayout, NULL);
+	vkDestroyDescriptorSetLayout(device, renderphase->imageDescriptorSetLayout, NULL);
+	vkDestroyDescriptorSetLayout(device, renderphase->samplerDescriptorSetLayout, NULL);
 
 	vkDestroyImageView(device, renderphase->depthView, NULL);
 	vkDestroyImage(device, renderphase->depthImage, NULL);
@@ -1577,7 +1561,7 @@ EVK_FUNC void evk_renderphase_viewport_destroy(evkViewportRenderphase* renderpha
 	memset(renderphase, 0, sizeof(evkUIRenderphase));
 }
 
-EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
+EVK_API evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRenderphase* renderphase, VkDevice device, VkPhysicalDevice physicalDevice, VkImageView* views, uint32_t viewsCount, VkExtent2D extent, VkFormat colorFormat) {
 	if (renderphase->evkRenderpass.framebuffers != NULL) {
 		for (uint32_t i = 0; i < renderphase->evkRenderpass.framebufferCount; i++) {
 			vkDestroyFramebuffer(device, renderphase->evkRenderpass.framebuffers[i], NULL);
@@ -1587,20 +1571,30 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 
 	if (renderphase->descriptorPool != VK_NULL_HANDLE) {
 		vkDestroyDescriptorPool(device, renderphase->descriptorPool, NULL);
+		renderphase->descriptorPool = VK_NULL_HANDLE;
 	}
 
-	if (renderphase->descriptorSet != VK_NULL_HANDLE) {
-		vkDestroyDescriptorSetLayout(device, renderphase->descriptorSetLayout, NULL);
+	if (renderphase->imageDescriptorSetLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, renderphase->imageDescriptorSetLayout, NULL);
+		renderphase->imageDescriptorSetLayout = VK_NULL_HANDLE;
+	}
+	if (renderphase->samplerDescriptorSetLayout != VK_NULL_HANDLE) {
+		vkDestroyDescriptorSetLayout(device, renderphase->samplerDescriptorSetLayout, NULL);
+		renderphase->samplerDescriptorSetLayout = VK_NULL_HANDLE;
 	}
 
-	// descriptor pool
-	VkDescriptorPoolSize poolSizes[] = { { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, EVK_CONCURRENTLY_RENDERED_FRAMES } };
+	
+	VkDescriptorPoolSize poolSizes[] = {
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, EVK_CONCURRENTLY_RENDERED_FRAMES },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, EVK_CONCURRENTLY_RENDERED_FRAMES }
+	};
+
 	VkDescriptorPoolCreateInfo poolCI;
 	memset(&poolCI, 0, sizeof(VkDescriptorPoolCreateInfo));
 	poolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolCI.pNext = NULL;
 	poolCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	poolCI.maxSets = (uint32_t)(2 * EVK_STATIC_ARRAY_SIZE(poolSizes));
+	poolCI.maxSets = (uint32_t)(EVK_CONCURRENTLY_RENDERED_FRAMES * 2);  // one for image, one for sampler
 	poolCI.poolSizeCount = (uint32_t)EVK_STATIC_ARRAY_SIZE(poolSizes);
 	poolCI.pPoolSizes = poolSizes;
 
@@ -1609,24 +1603,40 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		return evk_Failure;
 	}
 
-	// descriptor set layout
-	VkDescriptorSetLayoutBinding binding[1];
-	memset(binding, 0, sizeof(VkDescriptorSetLayoutBinding) * 1);
-	binding[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	binding[0].descriptorCount = 1;
-	binding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	VkDescriptorSetLayoutBinding imageBinding[1];
+	memset(imageBinding, 0, sizeof(VkDescriptorSetLayoutBinding) * 1);
+	imageBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	imageBinding[0].descriptorCount = 1;
+	imageBinding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	imageBinding[0].binding = 0;
 
-	VkDescriptorSetLayoutCreateInfo info;
-	memset(&info, 0, sizeof(VkDescriptorSetLayoutCreateInfo));
-	info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	info.bindingCount = 1;
-	info.pBindings = binding;
-	if (vkCreateDescriptorSetLayout(device, &info, NULL, &renderphase->descriptorSetLayout) != VK_SUCCESS) {
-		EVK_LOG(evk_Error, "Failed to create viewport render phase descriptor set layout");
+	VkDescriptorSetLayoutCreateInfo imageLayoutInfo;
+	memset(&imageLayoutInfo, 0, sizeof(VkDescriptorSetLayoutCreateInfo));
+	imageLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	imageLayoutInfo.bindingCount = 1;
+	imageLayoutInfo.pBindings = imageBinding;
+	if (vkCreateDescriptorSetLayout(device, &imageLayoutInfo, NULL, &renderphase->imageDescriptorSetLayout) != VK_SUCCESS) {
+		EVK_LOG(evk_Error, "Failed to create viewport image descriptor set layout");
 		return evk_Failure;
 	}
 
-	// sampler
+	VkDescriptorSetLayoutBinding samplerBinding[1];
+	memset(samplerBinding, 0, sizeof(VkDescriptorSetLayoutBinding) * 1);
+	samplerBinding[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+	samplerBinding[0].descriptorCount = 1;
+	samplerBinding[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerBinding[0].binding = 0;
+
+	VkDescriptorSetLayoutCreateInfo samplerLayoutInfo;
+	memset(&samplerLayoutInfo, 0, sizeof(VkDescriptorSetLayoutCreateInfo));
+	samplerLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	samplerLayoutInfo.bindingCount = 1;
+	samplerLayoutInfo.pBindings = samplerBinding;
+	if (vkCreateDescriptorSetLayout(device, &samplerLayoutInfo, NULL, &renderphase->samplerDescriptorSetLayout) != VK_SUCCESS) {
+		EVK_LOG(evk_Error, "Failed to create viewport sampler descriptor set layout");
+		return evk_Failure;
+	}
+
 	evkResult res = evk_device_create_image_sampler
 	(
 		device,
@@ -1645,7 +1655,6 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		return res;
 	}
 
-	// color image
 	res = evk_device_create_image
 	(
 		extent,
@@ -1670,10 +1679,10 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 
 	res = evk_device_create_image_view
 	(
-		device, 
+		device,
 		renderphase->colorImage,
 		renderphase->evkRenderpass.format,
-		VK_IMAGE_ASPECT_COLOR_BIT, 
+		VK_IMAGE_ASPECT_COLOR_BIT,
 		1,
 		1,
 		VK_IMAGE_VIEW_TYPE_2D,
@@ -1686,7 +1695,6 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		return res;
 	}
 
-	// depth buffer
 	res = evk_device_create_image
 	(
 		extent,
@@ -1714,11 +1722,11 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		device,
 		renderphase->depthImage,
 		evk_device_find_depth_format(physicalDevice),
-		VK_IMAGE_ASPECT_DEPTH_BIT, 
-		1, 
-		1, 
+		VK_IMAGE_ASPECT_DEPTH_BIT,
+		1,
+		1,
 		VK_IMAGE_VIEW_TYPE_2D,
-		NULL, 
+		NULL,
 		&renderphase->depthView
 	);
 
@@ -1727,7 +1735,6 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		return res;
 	}
 
-	// command buffer
 	VkCommandBuffer command = evk_device_begin_commandbuffer_singletime(device, renderphase->evkRenderpass.cmdPool);
 
 	VkImageSubresourceRange subresourceRange = { 0 };
@@ -1753,7 +1760,7 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 	res = evk_device_end_commandbuffer_singletime(device, renderphase->evkRenderpass.cmdPool, command, evk_get_graphics_queue());
 
 	if (res != evk_Success) {
-		EVK_LOG(evk_Error, "Failed to create the viewport renderphase depth image view");
+		EVK_LOG(evk_Error, "Failed to execute command buffer for viewport renderphase");
 		return res;
 	}
 
@@ -1761,10 +1768,10 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 	(
 		device,
 		renderphase->descriptorPool,
-		renderphase->descriptorSetLayout,
-		renderphase->sampler,
+		renderphase->imageDescriptorSetLayout,  // FIXED: Use image layout
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		renderphase->colorView,
-		&renderphase->descriptorSet
+		&renderphase->imageDescriptorSet
 	);
 
 	if (res != evk_Success) {
@@ -1772,16 +1779,29 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 		return res;
 	}
 
-	// framebuffer
+	res = evk_device_create_sampler_descriptor_set
+	(
+		device,
+		renderphase->descriptorPool,
+		renderphase->samplerDescriptorSetLayout,
+		renderphase->sampler,
+		&renderphase->samplerDescriptorSet
+	);
+
+	if (res != evk_Success) {
+		EVK_LOG(evk_Error, "Failed to create the viewport sampler descriptor set");
+		return res;
+	}
+
 	renderphase->evkRenderpass.framebufferCount = viewsCount;
 	renderphase->evkRenderpass.framebuffers = (VkFramebuffer*)m_malloc(sizeof(VkFramebuffer) * viewsCount);
-	EVK_ASSERT(renderphase->evkRenderpass.framebuffers != NULL, "Failed to allocate memory for the viewport renderphass framebuffers");
+	EVK_ASSERT(renderphase->evkRenderpass.framebuffers != NULL, "Failed to allocate memory for the viewport renderphase framebuffers");
 
 	for (size_t i = 0; i < viewsCount; i++) {
 		const VkImageView attachments[2] = { renderphase->colorView, renderphase->depthView };
 
 		VkFramebufferCreateInfo framebufferCI;
-        memset(&framebufferCI, 0, sizeof(VkFramebufferCreateInfo));
+		memset(&framebufferCI, 0, sizeof(VkFramebufferCreateInfo));
 		framebufferCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferCI.renderPass = renderphase->evkRenderpass.renderpass;
 		framebufferCI.attachmentCount = 2U;
@@ -1792,14 +1812,14 @@ EVK_FUNC evkResult evk_renderphase_viewport_create_framebuffers(evkViewportRende
 
 		if (vkCreateFramebuffer(device, &framebufferCI, NULL, &renderphase->evkRenderpass.framebuffers[i]) != VK_SUCCESS) {
 			EVK_LOG(evk_Error, "Failed to create viewport renderphase framebuffer");
-			return res;
+			return evk_Failure;
 		}
 	}
 
 	return evk_Success;
 }
 
-EVK_FUNC void evk_renderphase_viewport_update(evkViewportRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
+EVK_API void evk_renderphase_viewport_update(evkViewportRenderphase* renderphase, VkDevice device, float timestep, uint32_t currentFrame, VkExtent2D extent, uint32_t swapchainImageIndex, bool usingViewport, evkCallback_Render callback) {
 	VkClearValue clearValues[2] = { 0 };
     memset(clearValues, 0, sizeof(VkClearValue) * 2);
 	clearValues[0].color.float32[0] = 0.0f;

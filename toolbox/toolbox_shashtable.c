@@ -45,7 +45,7 @@ static toolbox_result internal_strdup(const toolbox_memfuncs* fun, const char* s
 }
 
 /// @brief improved hash function with overflow protection
-static TOOLBOX_FUNC unsigned long shash_djb2_hash(const char *str) {
+static unsigned long shash_djb2_hash(const char *str) {
     if (!str) return 0;
     if (SHASHTABLE_SIZE == 0) return 0;
     
@@ -66,11 +66,11 @@ static TOOLBOX_FUNC unsigned long shash_djb2_hash(const char *str) {
 // external
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TOOLBOX_FUNC shashtable* shashtable_init(void) {
+TOOLBOX_API shashtable* shashtable_init(void) {
     return shashtable_init_memfuncs(&TOOLBOX_DEFAULT_MEMFUNCS);
 }
 
-TOOLBOX_FUNC shashtable* shashtable_init_memfuncs(const toolbox_memfuncs* memfuncs)
+TOOLBOX_API shashtable* shashtable_init_memfuncs(const toolbox_memfuncs* memfuncs)
 {
     const toolbox_memfuncs* actual_memfuncs = memfuncs ? memfuncs : &TOOLBOX_DEFAULT_MEMFUNCS;
     
@@ -87,7 +87,7 @@ TOOLBOX_FUNC shashtable* shashtable_init_memfuncs(const toolbox_memfuncs* memfun
     return outHashtable;
 }
 
-TOOLBOX_FUNC void shashtable_destroy(shashtable* table) {
+TOOLBOX_API void shashtable_destroy(shashtable* table) {
     if (!table) return;
     
     for (unsigned long long i = 0; i < SHASHTABLE_SIZE; i++) {
@@ -104,7 +104,7 @@ TOOLBOX_FUNC void shashtable_destroy(shashtable* table) {
     toolbox_custom_free(&table->memfuncs, table);
 }
 
-TOOLBOX_FUNC toolbox_result shashtable_insert(shashtable* table, const char* key, void* value) {
+TOOLBOX_API toolbox_result shashtable_insert(shashtable* table, const char* key, void* value) {
     if (!table || !key) return TOOLBOX_ERROR_INVALID_PARAM;
     
     if (table->count == SHASHTABLE_SIZE_MAX) return TOOLBOX_ERROR_FULL;
@@ -144,7 +144,7 @@ TOOLBOX_FUNC toolbox_result shashtable_insert(shashtable* table, const char* key
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result shashtable_delete(shashtable* table, const char* key) {
+TOOLBOX_API toolbox_result shashtable_delete(shashtable* table, const char* key) {
     if (!table || !key) return TOOLBOX_ERROR_INVALID_PARAM;
     
     unsigned long index = shash_djb2_hash(key);
@@ -176,7 +176,7 @@ TOOLBOX_FUNC toolbox_result shashtable_delete(shashtable* table, const char* key
     return TOOLBOX_ERROR_NOT_FOUND;
 }
 
-TOOLBOX_FUNC void* shashtable_lookup(shashtable* table, const char* key)
+TOOLBOX_API void* shashtable_lookup(shashtable* table, const char* key)
 {
     if (!table || !key) return NULL;
     
@@ -195,15 +195,15 @@ TOOLBOX_FUNC void* shashtable_lookup(shashtable* table, const char* key)
     return NULL;
 }
 
-TOOLBOX_FUNC bool shashtable_contains(shashtable* table, const char* key) {
+TOOLBOX_API bool shashtable_contains(shashtable* table, const char* key) {
     return shashtable_lookup(table, key) != NULL;
 }
 
-TOOLBOX_FUNC unsigned long long shashtable_count(shashtable* table) {
+TOOLBOX_API unsigned long long shashtable_count(shashtable* table) {
     return table ? table->count : 0;
 }
 
-TOOLBOX_FUNC void shashtable_clear(shashtable* table) {
+TOOLBOX_API void shashtable_clear(shashtable* table) {
     if (!table) return;
     
     for (unsigned long long i = 0; i < SHASHTABLE_SIZE; i++) {
@@ -221,7 +221,7 @@ TOOLBOX_FUNC void shashtable_clear(shashtable* table) {
     table->count = 0;
 }
 
-TOOLBOX_FUNC void shashtable_foreach(shashtable* table, bool (*callback)(const char* key, void* value, void* userdata), void* userdata) {
+TOOLBOX_API void shashtable_foreach(shashtable* table, bool (*callback)(const char* key, void* value, void* userdata), void* userdata) {
     if (!table || !callback) return;
     
     for (unsigned long long i = 0; i < SHASHTABLE_SIZE; i++) {

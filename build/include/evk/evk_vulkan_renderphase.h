@@ -173,7 +173,6 @@ EVK_API void evk_renderphase_picking_update(evkPickingRenderphase* renderphase, 
 typedef struct evkUIRenderphase
 {
 	evkRenderpass evkRenderpass;
-	VkDescriptorSetLayout descriptorSetLayout;
 } evkUIRenderphase;
 
 /// @brief creates the picking render phase
@@ -205,8 +204,10 @@ typedef struct evkViewportRenderphase
 	VkImageView depthView;
 	VkSampler sampler;
 	VkDescriptorPool descriptorPool;
-	VkDescriptorSetLayout descriptorSetLayout;
-	VkDescriptorSet descriptorSet;
+	VkDescriptorSetLayout imageDescriptorSetLayout;
+	VkDescriptorSetLayout samplerDescriptorSetLayout;
+	VkDescriptorSet imageDescriptorSet;
+	VkDescriptorSet samplerDescriptorSet;
 } evkViewportRenderphase;
 
 /// @brief creates the picking render phase

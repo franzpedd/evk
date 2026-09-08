@@ -11,28 +11,40 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # enable IDE folder support for Visual Studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# platform and architecture
-if(WIN32)
+# ----------------------------------------------------------------------- platform and architecture detection
+if(WIN32)                       
     set(PLATFORM_NAME "win32")
-elseif(UNIX AND NOT APPLE)
+elseif(UNIX AND NOT APPLE)      
     set(PLATFORM_NAME "linux")
-elseif(APPLE)
+elseif(APPLE)                   
     set(PLATFORM_NAME "macos")
-else()
+else()                          
     set(PLATFORM_NAME "other")
 endif()
 
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8) 
     set(ARCH_NAME "x64")
-else()
+else()                          
     set(ARCH_NAME "x86")
 endif()
 
-# output folder hierarchy: build/<platform>-<arch>/(dynamic|static|include)
+# ----------------------------------------------------------------------- output directory configuration
+if(NOT DEFINED EVK_OUTPUT_DIR)
+    set(EVK_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "Output directory for EVK libraries")
+else()
+    message(STATUS "EVK output directory set to: ${EVK_OUTPUT_DIR}")
+endif()
+
+# create the full output paths
 set(PLATFORM_DIR "${PLATFORM_NAME}-${ARCH_NAME}")
-set(DYNAMIC_OUTPUT_DIR "${CMAKE_BINARY_DIR}/${PLATFORM_DIR}/dynamic")
-set(STATIC_OUTPUT_DIR  "${CMAKE_BINARY_DIR}/${PLATFORM_DIR}/static")
-set(INCLUDE_OUTPUT_DIR "${CMAKE_BINARY_DIR}//include")
+set(DYNAMIC_OUTPUT_DIR "${EVK_OUTPUT_DIR}/${PLATFORM_DIR}/dynamic")
+set(STATIC_OUTPUT_DIR  "${EVK_OUTPUT_DIR}/${PLATFORM_DIR}/static")
+set(INCLUDE_OUTPUT_DIR "${EVK_OUTPUT_DIR}/include")
+
+# ensure output directories exist
+file(MAKE_DIRECTORY ${DYNAMIC_OUTPUT_DIR})
+file(MAKE_DIRECTORY ${STATIC_OUTPUT_DIR})
+file(MAKE_DIRECTORY ${INCLUDE_OUTPUT_DIR})
 
 # project macro options
 option(EVK_ENABLE_VALIDATIONS "Enable API and Vulkan log information about info, warnings and errors" ON)
@@ -154,8 +166,8 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 # Dynamic Library (EVK_D)
 # ------------------------------------------------------------------------------
 add_library(EVK_D SHARED ${SOURCES} ${HEADERS})
-target_compile_definitions(EVK_D PRIVATE EVK_SHARED EVK_EXPORT)
-target_compile_definitions(EVK_D PUBLIC EVK_SHARED)
+target_compile_definitions(EVK_D PUBLIC EVK_SHARED MEMM_SHARED TOOLBOX_SHARED VECMATH_SHARED)
+target_compile_definitions(EVK_D PRIVATE EVK_EXPORT MEMM_EXPORT TOOLBOX_EXPORT VECMATH_EXPORT)
 
 set_target_properties(EVK_D PROPERTIES 
     OUTPUT_NAME evk 

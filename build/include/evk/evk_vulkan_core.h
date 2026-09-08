@@ -67,9 +67,6 @@ EVK_API VkRenderPass evk_get_renderpass(evkRenderphaseType type);
 /// @brief returns the command pool of a particular renderphase
 EVK_API VkCommandPool evk_get_command_pool(evkRenderphaseType type);
 
-/// @brief returns the descriptor set layout used for ui
-EVK_API VkDescriptorSetLayout evk_get_ui_descriptor_set_layout();
-
 /// @brief this is a work-around to retrieve the render phase without defining it yet
 EVK_API void* evk_get_renderphase(evkRenderphaseType type);
 
@@ -105,7 +102,10 @@ EVK_API evkResult evk_device_create_image_view(VkDevice device, VkImage image, V
 EVK_API evkResult evk_device_create_image_sampler(VkDevice device, VkPhysicalDevice physicalDevice, VkFilter min, VkFilter mag, VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w, float mipLevels, VkSampler* outSampler);
 
 /// @brief creates an image descriptor set based on various params
-EVK_API evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, VkImageView view, VkDescriptorSet* outDescriptor);
+EVK_API evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkImageLayout layout, VkImageView view, VkDescriptorSet* outDescriptor);
+
+/// @brief creates an sampler descriptor set based on various params
+EVK_API evkResult evk_device_create_sampler_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, VkDescriptorSet* outDescriptor);
 
 /// @brief generates mipmaps for the image
 EVK_API void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, int32_t width, int32_t height, int32_t mipLevels, VkImage image);

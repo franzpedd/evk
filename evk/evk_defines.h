@@ -34,17 +34,10 @@
 
 #if defined(EVK_HEADER_ONLY)
     #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-        #define EVK_FUNC static inline
+        #define EVK_API static inline
     #else
-        #define EVK_FUNC static  // fallback for C89
+        #define EVK_API static  // fallback for C89
     #endif
-    #undef EVK_API
-    #define EVK_API
-    
-#elif defined(EVK_SHARED)
-    #define EVK_FUNC
-#else
-    #define EVK_FUNC
 #endif // EVK_HEADER_ONLY
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +47,7 @@
 #ifdef _WIN32
     #define VK_USE_PLATFORM_WIN32_KHR
     #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
     #include <Windows.h>
     
     #ifndef _WINDEF_

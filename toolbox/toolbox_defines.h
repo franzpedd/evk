@@ -34,17 +34,10 @@
 
 #if defined(TOOLBOX_HEADER_ONLY)
     #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-        #define TOOLBOX_FUNC static inline
+        #define TOOLBOX_API static inline
     #else
-        #define TOOLBOX_FUNC static  // fallback for C89
+        #define TOOLBOX_API static  // fallback for C89
     #endif
-    #undef TOOLBOX_API
-    #define TOOLBOX_API
-    
-#elif defined(TOOLBOX_SHARED)
-    #define TOOLBOX_FUNC
-#else
-    #define TOOLBOX_FUNC
 #endif // TOOLBOX_HEADER_ONLY
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

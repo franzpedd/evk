@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 /// @brief Internal helper to find the last path separator ('/' or '\')
-static TOOLBOX_FUNC const char* find_last_separator(const char* path) {
+static const char* find_last_separator(const char* path) {
     if (!path) return NULL;
 
     const char* last_slash = strrchr(path, '/');
@@ -22,7 +22,7 @@ static TOOLBOX_FUNC const char* find_last_separator(const char* path) {
 }
 
 /// @brief Internal helper to safely copy up to (dest_size - 1) bytes with null termination
-static TOOLBOX_FUNC bool safe_strcpy(char* dest, const char* src, size_t dest_size) {
+static bool safe_strcpy(char* dest, const char* src, size_t dest_size) {
     if (!dest || dest_size == 0) return false;
     if (!src) {
         dest[0] = '\0';
@@ -39,7 +39,7 @@ static TOOLBOX_FUNC bool safe_strcpy(char* dest, const char* src, size_t dest_si
     return !truncated;
 }
 
-TOOLBOX_FUNC bool filename_from_path(const char* path, char* outBuffer, size_t bufferSize) {
+TOOLBOX_API bool filename_from_path(const char* path, char* outBuffer, size_t bufferSize) {
     if (!outBuffer || bufferSize == 0) return false;
 
     if (!path) {
@@ -58,7 +58,7 @@ TOOLBOX_FUNC bool filename_from_path(const char* path, char* outBuffer, size_t b
     return safe_strcpy(outBuffer, filename, bufferSize);
 }
 
-TOOLBOX_FUNC bool extension_from_path(const char* path, char* outBuffer, size_t bufferSize) {
+TOOLBOX_API bool extension_from_path(const char* path, char* outBuffer, size_t bufferSize) {
     if (!outBuffer || bufferSize == 0) return false;
 
     if (!path) {
@@ -85,7 +85,7 @@ TOOLBOX_FUNC bool extension_from_path(const char* path, char* outBuffer, size_t 
     return false;
 }
 
-TOOLBOX_FUNC bool basename_from_path(const char* path, char* outBuffer, size_t bufferSize) {
+TOOLBOX_API bool basename_from_path(const char* path, char* outBuffer, size_t bufferSize) {
     if (!outBuffer || bufferSize == 0) return false;
 
     if (!path) {
@@ -116,7 +116,7 @@ TOOLBOX_FUNC bool basename_from_path(const char* path, char* outBuffer, size_t b
     return safe_strcpy(outBuffer, filename, bufferSize);
 }
 
-TOOLBOX_FUNC bool dirname_from_path(const char* path, char* outBuffer, size_t bufferSize) {
+TOOLBOX_API bool dirname_from_path(const char* path, char* outBuffer, size_t bufferSize) {
     if (!outBuffer || bufferSize == 0) return false;
 
     if (!path || *path == '\0') {

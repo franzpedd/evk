@@ -34,17 +34,10 @@
 
 #if defined(MEMM_HEADER_ONLY)
     #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-        #define MEMM_FUNC static inline
+        #define MEMM_API static inline
     #else
-        #define MEMM_FUNC static  // fallback for C89
+        #define MEMM_API static  // fallback for C89
     #endif
-    #undef MEMM_API
-    #define MEMM_API
-    
-#elif defined(MEMM_SHARED)
-    #define MEMM_FUNC
-#else
-    #define MEMM_FUNC
 #endif // MEMM_HEADER_ONLY
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -101,7 +101,7 @@ static evkVulkanBackend* g_EVKBackend = NULL;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// @brief if validations are enabled, all vulkan messages will be call this function, wich will log the messages into the terminal
-static EVK_FUNC VKAPI_ATTR VkBool32 VKAPI_CALL ievk_log_callback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* callback, void* userData) {
+static VKAPI_ATTR VkBool32 VKAPI_CALL ievk_log_callback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* callback, void* userData) {
     if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         EVK_LOG(evk_Error, "%s\n", callback->pMessage);
         return VK_FALSE;
@@ -125,7 +125,7 @@ static EVK_FUNC VKAPI_ATTR VkBool32 VKAPI_CALL ievk_log_callback(VkDebugUtilsMes
 }
 
 /// @brief the instance creation requires the names of all extensions it'll use, this changes depending on: platform, portability and validation requests, this function returns the list correctly
-static EVK_FUNC bool ievk_get_instance_extensions(uint32_t* count, const char** names, bool validations) {
+static bool ievk_get_instance_extensions(uint32_t* count, const char** names, bool validations) {
     uint32_t base_count = 2;
     
     #ifdef __APPLE__
@@ -170,11 +170,11 @@ static EVK_FUNC bool ievk_get_instance_extensions(uint32_t* count, const char** 
 }
 
 /// @brief the vulkan instance is the begining of all vulkan stuff, it's like the root object between our code and the gpu, this function creates it correctly
-static EVK_FUNC evkInstance ievk_instance_create(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, bool validations) {
+static evkInstance ievk_instance_create(const char* appName, uint32_t appVersion, const char* engineName, uint32_t engineVersion, bool validations) {
     evkInstance evkInstance;
     memset(&evkInstance, 0, sizeof(evkInstance));
 
-    if(volkInitialize() != VK_SUCCESS) {
+    if (volkInitialize() != VK_SUCCESS) {
         EVK_LOG(evk_Error, "Failed to initialize volk, is vulkan library installed?");
         return evkInstance;
     }
@@ -284,7 +284,7 @@ static EVK_FUNC evkInstance ievk_instance_create(const char* appName, uint32_t a
 }
 
 /// @brief this function releases the used resources on instance creation
-static EVK_FUNC void ievk_instance_destroy(evkInstance* evkInstance) {
+static void ievk_instance_destroy(evkInstance* evkInstance) {
     EVK_ASSERT(evkInstance != NULL, "Vulkan backend is NULL");
 
     vkDestroySurfaceKHR(evkInstance->instance, evkInstance->surface, NULL);
@@ -304,7 +304,7 @@ static EVK_FUNC void ievk_instance_destroy(evkInstance* evkInstance) {
 }
 
 /// @brief creates the the renderable surface/window and depends on the operating system, pay attention if you're on linux since the auto-detection will default to wayland if not especified
-static EVK_FUNC void ievk_surface_create(VkInstance instance, VkSurfaceKHR* surface, void* rawWindow, void* rawDisplay) {
+static void ievk_surface_create(VkInstance instance, VkSurfaceKHR* surface, void* rawWindow, void* rawDisplay) {
     #ifdef _WIN32
         VkWin32SurfaceCreateInfoKHR createInfo;
         memset(&createInfo, 0, sizeof(VkWin32SurfaceCreateInfoKHR));
@@ -382,7 +382,7 @@ static EVK_FUNC void ievk_surface_create(VkInstance instance, VkSurfaceKHR* surf
 }
 
 /// @brief makes a check if all required extensions are present for that particular physical device
-static EVK_FUNC bool ievk_check_device_extension_support(VkPhysicalDevice device, const char** required_extensions, uint32_t extension_count) {
+static bool ievk_check_device_extension_support(VkPhysicalDevice device, const char** required_extensions, uint32_t extension_count) {
     uint32_t available_extension_count;
     vkEnumerateDeviceExtensionProperties(device, NULL, &available_extension_count, NULL);
 
@@ -408,7 +408,7 @@ static EVK_FUNC bool ievk_check_device_extension_support(VkPhysicalDevice device
 }
 
 /// @brief since one compute may have multiple physical gpus we must check them all to see which is more fit
-static EVK_FUNC VkPhysicalDevice ievk_device_choose(VkInstance instance, VkSurfaceKHR surface) {
+static VkPhysicalDevice ievk_device_choose(VkInstance instance, VkSurfaceKHR surface) {
     uint32_t gpus = 0;
     vkEnumeratePhysicalDevices(instance, &gpus, NULL);
 
@@ -452,7 +452,7 @@ static EVK_FUNC VkPhysicalDevice ievk_device_choose(VkInstance instance, VkSurfa
 }
 
 /// @brief creates the logical device based on choosen physical device and surface, it'll be logical connection to a specific GPU, used for creatin all vulkan objects from now on
-static EVK_FUNC evkDevice ievk_device_create(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice) {
+static evkDevice ievk_device_create(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice) {
     evkDevice device;
     memset(&device, 0, sizeof(evkDevice));
     device.physicalDevice = physicalDevice;
@@ -529,7 +529,7 @@ static EVK_FUNC evkDevice ievk_device_create(VkInstance instance, VkSurfaceKHR s
 }
 
 /// @brief releases all resources used uppon device creation
-static EVK_FUNC void ievk_device_destroy(evkDevice* evkDevice) {
+static void ievk_device_destroy(evkDevice* evkDevice) {
     EVK_ASSERT(evkDevice != NULL, "evkDevice is NULL");
 
     vkDestroyDevice(g_EVKBackend->evkDevice.device, NULL);
@@ -537,7 +537,7 @@ static EVK_FUNC void ievk_device_destroy(evkDevice* evkDevice) {
 }
 
 /// @brief queries information for the swapchain, like available surface formats and present mode.
-static EVK_FUNC evkSwapchainDetails ievk_swapchain_query_details(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+static evkSwapchainDetails ievk_swapchain_query_details(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
     evkSwapchainDetails details = { 0 };
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.capabilities);
     vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &details.surfaceFormatCount, NULL);
@@ -563,7 +563,7 @@ static EVK_FUNC evkSwapchainDetails ievk_swapchain_query_details(VkPhysicalDevic
 }
 
 /// @brief chooses the surface format most appropriate from a list of available formats
-static EVK_FUNC VkSurfaceFormatKHR ievk_swapchain_choose_surface_format(VkSurfaceFormatKHR* formats, uint32_t quantity) {
+static VkSurfaceFormatKHR ievk_swapchain_choose_surface_format(VkSurfaceFormatKHR* formats, uint32_t quantity) {
     for (uint32_t i = 0; i < quantity; i++) {
         if (formats[i].format == VK_FORMAT_B8G8R8A8_UNORM && formats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) return formats[i];
     }
@@ -572,7 +572,7 @@ static EVK_FUNC VkSurfaceFormatKHR ievk_swapchain_choose_surface_format(VkSurfac
 }
 
 /// @brief chooses the appresentation mode for the swapchain
-static EVK_FUNC VkPresentModeKHR ievk_swapchain_choose_present_mode(VkPresentModeKHR* modes, uint32_t quantity, bool vsync) {
+static VkPresentModeKHR ievk_swapchain_choose_present_mode(VkPresentModeKHR* modes, uint32_t quantity, bool vsync) {
     if (modes == NULL || quantity == 0 || vsync)  return VK_PRESENT_MODE_FIFO_KHR;
 
     bool immediateModeAvailable = false;
@@ -586,7 +586,7 @@ static EVK_FUNC VkPresentModeKHR ievk_swapchain_choose_present_mode(VkPresentMod
 }
 
 /// @brief adjusts the correct extent for the swapchain
-static EVK_FUNC VkExtent2D ievk_swapchain_adjust_extent(const VkSurfaceCapabilitiesKHR* capabilities, uint32_t width, uint32_t height) {
+static VkExtent2D ievk_swapchain_adjust_extent(const VkSurfaceCapabilitiesKHR* capabilities, uint32_t width, uint32_t height) {
     if (capabilities->currentExtent.width != UINT32_MAX) return capabilities->currentExtent;
 
     VkExtent2D actualExtent = { width, height };
@@ -597,7 +597,7 @@ static EVK_FUNC VkExtent2D ievk_swapchain_adjust_extent(const VkSurfaceCapabilit
 }
 
 /// @brief creates the swapchain object
-static EVK_FUNC evkSwapchain ievk_swapchain_create(VkSurfaceKHR surface, VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D extent, bool vsync) {
+static evkSwapchain ievk_swapchain_create(VkSurfaceKHR surface, VkDevice device, VkPhysicalDevice physicalDevice, VkExtent2D extent, bool vsync) {
     evkSwapchain swapchain;
     memset(&swapchain, 0, sizeof(evkSwapchain));
 
@@ -664,7 +664,7 @@ static EVK_FUNC evkSwapchain ievk_swapchain_create(VkSurfaceKHR surface, VkDevic
 }
 
 /// @brief releases all resources used on swapchain creation
-static EVK_FUNC void ievk_swapchain_destroy(evkSwapchain* swapchain, VkDevice device) {
+static void ievk_swapchain_destroy(evkSwapchain* swapchain, VkDevice device) {
     for (uint32_t i = 0; i < swapchain->imageCount; i++) {
         vkDestroyImageView(device, swapchain->imageViews[i], NULL);
     }
@@ -677,7 +677,7 @@ static EVK_FUNC void ievk_swapchain_destroy(evkSwapchain* swapchain, VkDevice de
 }
 
 /// @brief creates all syncronization resources for CPU-GPU communication
-static EVK_FUNC evkSync ievk_sync_create(VkDevice device, uint32_t objectCount) {
+static evkSync ievk_sync_create(VkDevice device, uint32_t objectCount) {
     evkSync sync;
     memset(&sync, 0, sizeof(evkSync));
     sync.objectCount = objectCount;
@@ -708,7 +708,7 @@ static EVK_FUNC evkSync ievk_sync_create(VkDevice device, uint32_t objectCount) 
 }
 
 /// @brief releases all resources used on sync creation
-static EVK_FUNC void ievk_sync_destroy(evkSync* sync, VkDevice device)
+static void ievk_sync_destroy(evkSync* sync, VkDevice device)
 {
     for (uint32_t i = 0; i < sync->objectCount; i++) {
         if (sync->imageAvailableSemaphores[i]) vkDestroySemaphore(device, sync->imageAvailableSemaphores[i], NULL);
@@ -721,7 +721,7 @@ static EVK_FUNC void ievk_sync_destroy(evkSync* sync, VkDevice device)
     m_free(sync->framesInFlightFences);
 }
 
-static EVK_FUNC void ievk_resize(VkExtent2D extent) {
+static void ievk_resize(VkExtent2D extent) {
     vkDeviceWaitIdle(g_EVKBackend->evkDevice.device);
 
     // if you wish to make a vulkan resize, you must first re-invent the universe
@@ -760,7 +760,7 @@ static EVK_FUNC void ievk_resize(VkExtent2D extent) {
 // vulkan general core
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkResult evk_initialize_backend(const evkCreateInfo* ci) {
+EVK_API evkResult evk_initialize_backend(const evkCreateInfo* ci) {
     // general initialization
     if (g_EVKBackend == NULL) {
         g_EVKBackend = (evkVulkanBackend*)m_malloc(sizeof(evkVulkanBackend));
@@ -836,7 +836,7 @@ EVK_FUNC evkResult evk_initialize_backend(const evkCreateInfo* ci) {
     return evk_Success;
 }
 
-EVK_FUNC void evk_shutdown_backend() {
+EVK_API void evk_shutdown_backend() {
     evk_buffer_destroy(g_EVKBackend->evkDevice.device, (evkBuffer*)shashtable_lookup(g_EVKBackend->buffers, "MainCamera"));
     shashtable_destroy(g_EVKBackend->buffers);
 
@@ -861,12 +861,12 @@ EVK_FUNC void evk_shutdown_backend() {
     m_free(g_EVKBackend);
 }
 
-EVK_FUNC void evk_update_backend(float timestep) {
+EVK_API void evk_update_backend(float timestep) {
     evkCamera* mainCamera = evk_get_main_camera();
     evk_camera_update(mainCamera, timestep);
 }
 
-EVK_FUNC void evk_render_backend(float timestep, bool* mustResize) {
+EVK_API void evk_render_backend(float timestep, bool* mustResize) {
     if (evk_currently_minimized()) return;
 
     evkCamera* mainCamera = evk_get_main_camera();
@@ -989,7 +989,7 @@ EVK_FUNC void evk_render_backend(float timestep, bool* mustResize) {
     g_EVKBackend->evkSync.currentFrame = (g_EVKBackend->evkSync.currentFrame + 1) % EVK_CONCURRENTLY_RENDERED_FRAMES;
 }
 
-EVK_FUNC uint32_t evk_pick_object_backend(float2 xy) {
+EVK_API uint32_t evk_pick_object_backend(float2 xy) {
     VkResult res;
     uint32_t pixelValue = 0;
 
@@ -1177,43 +1177,43 @@ EVK_FUNC uint32_t evk_pick_object_backend(float2 xy) {
 // vulkan getters/setters
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC VkInstance evk_get_instance() {
+EVK_API VkInstance evk_get_instance() {
     return g_EVKBackend->evkInstance.instance;
 }
 
-EVK_FUNC VkPhysicalDevice evk_get_physical_device() {
+EVK_API VkPhysicalDevice evk_get_physical_device() {
     return g_EVKBackend->evkDevice.physicalDevice;
 }
 
-EVK_FUNC VkPhysicalDeviceProperties evk_get_physical_device_properties() {
+EVK_API VkPhysicalDeviceProperties evk_get_physical_device_properties() {
     return g_EVKBackend->evkDevice.physicalProps;
 }
 
-EVK_FUNC VkPhysicalDeviceFeatures evk_get_physical_device_features() {
+EVK_API VkPhysicalDeviceFeatures evk_get_physical_device_features() {
     return g_EVKBackend->evkDevice.phyiscalFeatures;
 }
 
-EVK_FUNC VkPhysicalDeviceMemoryProperties evk_get_physical_device_memory_properties() {
+EVK_API VkPhysicalDeviceMemoryProperties evk_get_physical_device_memory_properties() {
     return g_EVKBackend->evkDevice.physicaMemProps;
 }
 
-EVK_FUNC VkDevice evk_get_device() {
+EVK_API VkDevice evk_get_device() {
     return g_EVKBackend->evkDevice.device;
 }
 
-EVK_FUNC VkQueue evk_get_graphics_queue() {
+EVK_API VkQueue evk_get_graphics_queue() {
     return g_EVKBackend->evkDevice.graphicsQueue;
 }
 
-EVK_FUNC uint32_t evk_get_graphics_queue_family() {
+EVK_API uint32_t evk_get_graphics_queue_family() {
     return g_EVKBackend->evkDevice.graphicsIndex;
 }
 
-EVK_FUNC uint32_t evk_get_swapchain_image_count() {
+EVK_API uint32_t evk_get_swapchain_image_count() {
     return g_EVKBackend->evkSwapchain.imageCount;
 }
 
-EVK_FUNC VkRenderPass evk_get_renderpass(evkRenderphaseType type) {
+EVK_API VkRenderPass evk_get_renderpass(evkRenderphaseType type) {
     switch (type)
     {
         case evk_Renderphase_Type_Main: return g_EVKBackend->evkMainRenderphase.evkRenderpass.renderpass;
@@ -1232,7 +1232,7 @@ EVK_FUNC VkRenderPass evk_get_renderpass(evkRenderphaseType type) {
     return VK_NULL_HANDLE;
 }
 
-EVK_FUNC VkCommandPool evk_get_command_pool(evkRenderphaseType type) {
+EVK_API VkCommandPool evk_get_command_pool(evkRenderphaseType type) {
     switch (type)
     {
         case evk_Renderphase_Type_Main: return g_EVKBackend->evkMainRenderphase.evkRenderpass.cmdPool;
@@ -1251,11 +1251,7 @@ EVK_FUNC VkCommandPool evk_get_command_pool(evkRenderphaseType type) {
     return VK_NULL_HANDLE;
 }
 
-EVK_FUNC VkDescriptorSetLayout evk_get_ui_descriptor_set_layout() {
-    return g_EVKBackend->evkUIRenderphase.descriptorSetLayout;
-}
-
-EVK_FUNC void* evk_get_renderphase(evkRenderphaseType type) {
+EVK_API void* evk_get_renderphase(evkRenderphaseType type) {
     switch (type)
     {
         case evk_Renderphase_Type_Main: return &g_EVKBackend->evkMainRenderphase;
@@ -1267,19 +1263,19 @@ EVK_FUNC void* evk_get_renderphase(evkRenderphaseType type) {
     return NULL;
 }
 
-EVK_FUNC shashtable* evk_get_pipelines_library() {
+EVK_API shashtable* evk_get_pipelines_library() {
     return g_EVKBackend->pipelines;
 }
 
-EVK_FUNC shashtable* evk_get_buffers_library() {
+EVK_API shashtable* evk_get_buffers_library() {
     return g_EVKBackend->buffers;
 }
 
-EVK_FUNC uint32_t evk_get_current_frame() {
+EVK_API uint32_t evk_get_current_frame() {
     return g_EVKBackend->evkSync.currentFrame;
 }
 
-EVK_FUNC evkRenderphaseType evk_get_current_renderphase_type() {
+EVK_API evkRenderphaseType evk_get_current_renderphase_type() {
     return g_EVKBackend->currentRenderphase;
 }
 
@@ -1287,11 +1283,11 @@ EVK_FUNC evkRenderphaseType evk_get_current_renderphase_type() {
 // vulkan device-related 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC void evk_device_wait_idle() {
+EVK_API void evk_device_wait_idle() {
     vkDeviceWaitIdle(g_EVKBackend->evkDevice.device);
 }
 
-EVK_FUNC evkQueueFamily evk_device_find_queue_families(VkPhysicalDevice device, VkSurfaceKHR surface) {
+EVK_API evkQueueFamily evk_device_find_queue_families(VkPhysicalDevice device, VkSurfaceKHR surface) {
     evkQueueFamily indices = { 0 };
     indices.graphics = UINT32_MAX;
     indices.present = UINT32_MAX;
@@ -1328,7 +1324,7 @@ EVK_FUNC evkQueueFamily evk_device_find_queue_families(VkPhysicalDevice device, 
     return indices;
 }
 
-EVK_FUNC evkResult evk_device_create_image(VkExtent2D size, uint32_t mipLevels, uint32_t arrayLayers, VkDevice device, VkPhysicalDevice physicalDevice, VkImage* image, VkDeviceMemory* memory, VkFormat format, evkMSAA samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImageCreateFlags flags) {
+EVK_API evkResult evk_device_create_image(VkExtent2D size, uint32_t mipLevels, uint32_t arrayLayers, VkDevice device, VkPhysicalDevice physicalDevice, VkImage* image, VkDeviceMemory* memory, VkFormat format, evkMSAA samples, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags memoryProperties, VkImageCreateFlags flags) {
     VkImageCreateInfo imageCI;
     memset(&imageCI, 0, sizeof(VkImageCreateInfo));
     imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1373,7 +1369,7 @@ EVK_FUNC evkResult evk_device_create_image(VkExtent2D size, uint32_t mipLevels, 
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_device_create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels, uint32_t layerCount, VkImageViewType viewType, const VkComponentMapping* swizzle, VkImageView* outView) {
+EVK_API evkResult evk_device_create_image_view(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mipLevels, uint32_t layerCount, VkImageViewType viewType, const VkComponentMapping* swizzle, VkImageView* outView) {
     if (mipLevels == 0 || layerCount == 0) {
         EVK_LOG(evk_Error, "Invalid mipLevels or layerCount (must be >= 1)");
         return evk_Failure;
@@ -1408,7 +1404,7 @@ EVK_FUNC evkResult evk_device_create_image_view(VkDevice device, VkImage image, 
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_device_create_image_sampler(VkDevice device, VkPhysicalDevice physicalDevice, VkFilter min, VkFilter mag, VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w, float mipLevels, VkSampler* outSampler) {
+EVK_API evkResult evk_device_create_image_sampler(VkDevice device, VkPhysicalDevice physicalDevice, VkFilter min, VkFilter mag, VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w, float mipLevels, VkSampler* outSampler) {
     VkPhysicalDeviceProperties props;
     vkGetPhysicalDeviceProperties(physicalDevice, &props);
 
@@ -1439,7 +1435,7 @@ EVK_FUNC evkResult evk_device_create_image_sampler(VkDevice device, VkPhysicalDe
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, VkImageView view, VkDescriptorSet* outDescriptor) {
+EVK_API evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkImageLayout layout, VkImageView view, VkDescriptorSet* outDescriptor) {
     VkDescriptorSetAllocateInfo allocInfo;
     memset(&allocInfo, 0, sizeof(VkDescriptorSetAllocateInfo));
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1451,26 +1447,53 @@ EVK_FUNC evkResult evk_device_create_image_descriptor_set(VkDevice device, VkDes
         return evk_Failure;
     }
 
-    // update descriptor set
-    VkDescriptorImageInfo descImage;
-    memset(&descImage, 0, sizeof(VkDescriptorImageInfo));
-    descImage.sampler = sampler;
-    descImage.imageView = view;
-    descImage.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
+    VkDescriptorImageInfo descImage[1];
+    memset(&descImage, 0, sizeof(VkDescriptorImageInfo) * 2);
+    descImage[0].imageView = view;
+    descImage[0].imageLayout = layout;
+    
     VkWriteDescriptorSet writeDesc;
     memset(&writeDesc, 0, sizeof(VkWriteDescriptorSet));
     writeDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     writeDesc.dstSet = *outDescriptor;
     writeDesc.descriptorCount = 1;
-    writeDesc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    writeDesc.pImageInfo = &descImage;
+    writeDesc.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    writeDesc.pImageInfo = descImage;
     vkUpdateDescriptorSets(device, 1, &writeDesc, 0, NULL);
 
     return evk_Success;
 }
 
-EVK_FUNC void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, int32_t width, int32_t height, int32_t mipLevels, VkImage image) {
+EVK_API evkResult evk_device_create_sampler_descriptor_set(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout, VkSampler sampler, VkDescriptorSet* outDescriptor)
+{
+    VkDescriptorSetAllocateInfo allocInfo;
+    memset(&allocInfo, 0, sizeof(VkDescriptorSetAllocateInfo));
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = descriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &descriptorSetLayout;
+    if (vkAllocateDescriptorSets(device, &allocInfo, outDescriptor) != VK_SUCCESS) {
+        EVK_LOG(evk_Error, "Failed to allocate sampler descriptor set");
+        return evk_Failure;
+    }
+
+    VkDescriptorImageInfo descImage[1] = {};
+    descImage[0].sampler = sampler;
+
+    VkWriteDescriptorSet writeDesc;
+    memset(&writeDesc, 0, sizeof(VkWriteDescriptorSet));
+    writeDesc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDesc.dstSet = *outDescriptor;
+    writeDesc.dstBinding = 0;
+    writeDesc.descriptorCount = 1;
+    writeDesc.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+    writeDesc.pImageInfo = descImage;
+    vkUpdateDescriptorSets(device, 1, &writeDesc, 0, NULL);
+
+    return evk_Success;
+}
+
+EVK_API void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, VkCommandBuffer cmdBuffer, int32_t width, int32_t height, int32_t mipLevels, VkImage image) {
     if (mipLevels <= 1) return;
 
     VkImageMemoryBarrier barrier;
@@ -1535,7 +1558,7 @@ EVK_FUNC void evk_device_create_image_mipmaps(VkDevice device, VkQueue queue, Vk
     vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &barrier);
 }
 
-EVK_FUNC void evk_device_create_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImage image, VkAccessFlags srcAccessFlags, VkAccessFlags dstAccessFlags, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageSubresourceRange subresourceRange) {
+EVK_API void evk_device_create_image_memory_barrier(VkCommandBuffer cmdBuffer, VkImage image, VkAccessFlags srcAccessFlags, VkAccessFlags dstAccessFlags, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkImageSubresourceRange subresourceRange) {
     VkImageMemoryBarrier imageMemoryBarrier;
     memset(&imageMemoryBarrier, 0, sizeof(VkImageMemoryBarrier));
     imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1551,7 +1574,7 @@ EVK_FUNC void evk_device_create_image_memory_barrier(VkCommandBuffer cmdBuffer, 
     vkCmdPipelineBarrier(cmdBuffer, srcStageMask, dstStageMask, 0, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
 }
 
-EVK_FUNC uint32_t evk_device_find_suitable_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+EVK_API uint32_t evk_device_find_suitable_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
@@ -1565,7 +1588,7 @@ EVK_FUNC uint32_t evk_device_find_suitable_memory_type(VkPhysicalDevice physical
     return UINT32_MAX;
 }
 
-EVK_FUNC VkFormat evk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const VkFormat* candidates, uint32_t candidatesCount, VkImageTiling tiling, VkFormatFeatureFlags features) {
+EVK_API VkFormat evk_device_find_suitable_format(VkPhysicalDevice physicalDevice, const VkFormat* candidates, uint32_t candidatesCount, VkImageTiling tiling, VkFormatFeatureFlags features) {
     VkFormat resFormat = VK_FORMAT_UNDEFINED;
     for (uint32_t i = 0; i < candidatesCount; i++) {
         VkFormatProperties props;
@@ -1579,13 +1602,13 @@ EVK_FUNC VkFormat evk_device_find_suitable_format(VkPhysicalDevice physicalDevic
     return resFormat;
 }
 
-EVK_FUNC VkFormat evk_device_find_depth_format(VkPhysicalDevice physicalDevice) {
+EVK_API VkFormat evk_device_find_depth_format(VkPhysicalDevice physicalDevice) {
     const VkFormat candidates[] = { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT };
     VkFormat format = evk_device_find_suitable_format(physicalDevice, candidates, 3, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     return format;
 }
 
-EVK_FUNC evkResult evk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize size, VkBuffer* buffer, VkDeviceMemory* memory, void* data) {
+EVK_API evkResult evk_device_create_buffer(VkDevice device, VkPhysicalDevice physicalDevice, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkDeviceSize size, VkBuffer* buffer, VkDeviceMemory* memory, void* data) {
     VkBufferCreateInfo bufferCI;
     memset(&bufferCI, 0, sizeof(VkBufferCreateInfo));
     bufferCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1641,7 +1664,7 @@ EVK_FUNC evkResult evk_device_create_buffer(VkDevice device, VkPhysicalDevice ph
     return evk_Success;
 }
 
-EVK_FUNC VkCommandBuffer evk_device_begin_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool) {
+EVK_API VkCommandBuffer evk_device_begin_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool) {
     VkCommandBufferAllocateInfo cmdBufferAllocInfo;
     memset(&cmdBufferAllocInfo, 0, sizeof(VkCommandBufferAllocateInfo));
     cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1666,7 +1689,7 @@ EVK_FUNC VkCommandBuffer evk_device_begin_commandbuffer_singletime(VkDevice devi
     return commandBuffer;
 }
 
-EVK_FUNC evkResult evk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue) {
+EVK_API evkResult evk_device_end_commandbuffer_singletime(VkDevice device, VkCommandPool cmdPool, VkCommandBuffer cmdBuffer, VkQueue queue) {
     if (vkEndCommandBuffer(cmdBuffer) != VK_SUCCESS) {
         EVK_LOG(evk_Error, "Failed to end command buffer recording");
         return evk_Failure;
@@ -1692,7 +1715,7 @@ EVK_FUNC evkResult evk_device_end_commandbuffer_singletime(VkDevice device, VkCo
     return evk_Success;
 }
 
-EVK_FUNC int32_t evk_device_calculate_image_mipmap(uint32_t width, uint32_t height, bool uiImage) {
+EVK_API int32_t evk_device_calculate_image_mipmap(uint32_t width, uint32_t height, bool uiImage) {
     if (uiImage || evk_get_msaa() != evk_Msaa_Off) return 1; // UI textures or MSAA textures cannot have mipmaps
     return (int32_t)f_floor(f_log2(VECMATH_MAX((float)width, (float)height))) + 1;
 }
@@ -1701,7 +1724,7 @@ EVK_FUNC int32_t evk_device_calculate_image_mipmap(uint32_t width, uint32_t heig
 // vulkan buffer-related 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkBuffer* evk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, uint32_t frameCount) {
+EVK_API evkBuffer* evk_buffer_create(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memoryProperties, uint32_t frameCount) {
     if (size == 0 || frameCount == 0) {
         EVK_LOG(evk_Error, "Invalid buffer size or frame count");
         return NULL;
@@ -1783,7 +1806,7 @@ EVK_FUNC evkBuffer* evk_buffer_create(VkDevice device, VkPhysicalDevice physical
     return buffer;
 }
 
-EVK_FUNC void evk_buffer_destroy(VkDevice device, evkBuffer* buffer) {
+EVK_API void evk_buffer_destroy(VkDevice device, evkBuffer* buffer) {
     if (!buffer) return;
 
     if (buffer->buffers) {
@@ -1817,7 +1840,7 @@ EVK_FUNC void evk_buffer_destroy(VkDevice device, evkBuffer* buffer) {
     m_free(buffer);
 }
 
-EVK_FUNC evkResult evk_buffer_map(VkDevice device, evkBuffer* buffer, uint32_t frameIndex) {
+EVK_API evkResult evk_buffer_map(VkDevice device, evkBuffer* buffer, uint32_t frameIndex) {
     if (!buffer || frameIndex >= buffer->frameCount) return evk_Failure;
     if (buffer->isMapped[frameIndex]) return evk_Success; // already mapped
 
@@ -1833,7 +1856,7 @@ EVK_FUNC evkResult evk_buffer_map(VkDevice device, evkBuffer* buffer, uint32_t f
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_buffer_unmap(VkDevice device, evkBuffer* buffer, uint32_t frameIndex) {
+EVK_API evkResult evk_buffer_unmap(VkDevice device, evkBuffer* buffer, uint32_t frameIndex) {
     if (!buffer || frameIndex >= buffer->frameCount) return evk_Failure;
     if (!buffer->isMapped[frameIndex]) return evk_Success; // not mapped
 
@@ -1844,7 +1867,7 @@ EVK_FUNC evkResult evk_buffer_unmap(VkDevice device, evkBuffer* buffer, uint32_t
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_buffer_copy(evkBuffer* buffer, uint32_t frameIndex, const void* data, VkDeviceSize size, VkDeviceSize offset) {
+EVK_API evkResult evk_buffer_copy(evkBuffer* buffer, uint32_t frameIndex, const void* data, VkDeviceSize size, VkDeviceSize offset) {
     if (!buffer || !data || size == 0) return evk_Failure;
 
     if (frameIndex >= buffer->frameCount) {
@@ -1866,7 +1889,7 @@ EVK_FUNC evkResult evk_buffer_copy(evkBuffer* buffer, uint32_t frameIndex, const
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_buffer_flush(VkDevice device, evkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize nonCoherentAtomSize, VkDeviceSize offset) {
+EVK_API evkResult evk_buffer_flush(VkDevice device, evkBuffer* buffer, uint32_t frameIndex, VkDeviceSize size, VkDeviceSize nonCoherentAtomSize, VkDeviceSize offset) {
     if (!buffer || frameIndex >= buffer->frameCount) return evk_Failure;
 
     if (!(buffer->memoryProperties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
@@ -1896,7 +1919,7 @@ EVK_FUNC evkResult evk_buffer_flush(VkDevice device, evkBuffer* buffer, uint32_t
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_buffer_command_copy(VkCommandBuffer commandBuffer, evkBuffer* srcBuffer, uint32_t srcFrameIndex, evkBuffer* dstBuffer, uint32_t dstFrameIndex, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
+EVK_API evkResult evk_buffer_command_copy(VkCommandBuffer commandBuffer, evkBuffer* srcBuffer, uint32_t srcFrameIndex, evkBuffer* dstBuffer, uint32_t dstFrameIndex, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
     if (!srcBuffer || !dstBuffer || srcFrameIndex >= srcBuffer->frameCount || dstFrameIndex >= dstBuffer->frameCount) return evk_Failure;
 
     VkBufferCopy copyRegion = { 0 };

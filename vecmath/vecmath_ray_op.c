@@ -13,7 +13,7 @@ extern "C" {
 // ray from screen point (vulkan only for now)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fray fray_from_screen_point_vulkan(const float2* screenPos, const float2* windowSize, float fov, float aspectRatio, const float3* cameraPos, const float3* cameraFront, const float3* cameraUp) {
+VECMATH_API fray fray_from_screen_point_vulkan(const float2* screenPos, const float2* windowSize, float fov, float aspectRatio, const float3* cameraPos, const float3* cameraFront, const float3* cameraUp) {
     fray result = fray_zero();
     if (!screenPos || !windowSize || !cameraPos || !cameraFront || !cameraUp) return result;
     
@@ -45,7 +45,7 @@ VECMATH_FUNC fray fray_from_screen_point_vulkan(const float2* screenPos, const f
 // screen to world point (vulkan only for now)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float3 fray_screen_to_world_point_vulkan(const float2* screenPos, const float2* windowSize, float distance, float fov, float aspectRatio, const float3* cameraPos, const float3* cameraFront, const float3* cameraUp) {
+VECMATH_API float3 fray_screen_to_world_point_vulkan(const float2* screenPos, const float2* windowSize, float distance, float fov, float aspectRatio, const float3* cameraPos, const float3* cameraFront, const float3* cameraUp) {
     float3 result = float3_zero();
     if (!screenPos || !windowSize || !cameraPos || !cameraFront || !cameraUp) return result;
 

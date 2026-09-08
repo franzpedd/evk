@@ -30,19 +30,19 @@ struct idgen
 // internal
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static TOOLBOX_FUNC inline bool bit_test(const unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
+static inline bool bit_test(const unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
     unsigned int word = BIT_WORD(idx);
     if (word >= bitset_size) return false;
     return (bits[word] & BIT_MASK(idx)) != 0;
 }
 
-static TOOLBOX_FUNC inline void bit_set(unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
+static inline void bit_set(unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
     unsigned int word = BIT_WORD(idx);
     if (word >= bitset_size) return;
     bits[word] |= BIT_MASK(idx);
 }
 
-static TOOLBOX_FUNC inline void bit_clear(unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
+static inline void bit_clear(unsigned int* bits, unsigned int bitset_size, unsigned int idx) {
     unsigned int word = BIT_WORD(idx);
     if (word >= bitset_size) return;
     bits[word] &= ~BIT_MASK(idx);

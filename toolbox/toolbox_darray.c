@@ -24,7 +24,7 @@ struct darray
 };
 
 /// @brief helper to check for multiplication overflow
-static TOOLBOX_FUNC bool is_multiply_overflow(unsigned long long a, unsigned long long b) {
+static bool is_multiply_overflow(unsigned long long a, unsigned long long b) {
     return (a > 0 && b > SIZE_MAX / a);
 }
 
@@ -32,11 +32,11 @@ static TOOLBOX_FUNC bool is_multiply_overflow(unsigned long long a, unsigned lon
 // external
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TOOLBOX_FUNC darray* darray_init(unsigned long long elementSize, unsigned long long initialCapacity) {
+TOOLBOX_API darray* darray_init(unsigned long long elementSize, unsigned long long initialCapacity) {
     return darray_init_memfuncs(elementSize, initialCapacity, &TOOLBOX_DEFAULT_MEMFUNCS);
 }
 
-TOOLBOX_FUNC darray* darray_init_memfuncs(unsigned long long elementSize, unsigned long long initialCapacity, const toolbox_memfuncs* memfuncs)
+TOOLBOX_API darray* darray_init_memfuncs(unsigned long long elementSize, unsigned long long initialCapacity, const toolbox_memfuncs* memfuncs)
 {
     if (elementSize == 0) return NULL;
     
@@ -64,13 +64,13 @@ TOOLBOX_FUNC darray* darray_init_memfuncs(unsigned long long elementSize, unsign
     return outArray;
 }
 
-TOOLBOX_FUNC void darray_destroy(darray* array) {
+TOOLBOX_API void darray_destroy(darray* array) {
     if (!array) return;
     toolbox_custom_free(&array->memfuncs, array->data);
     toolbox_custom_free(&array->memfuncs, array);
 }
 
-TOOLBOX_FUNC toolbox_result darray_push_back(darray* array, const void* element) {
+TOOLBOX_API toolbox_result darray_push_back(darray* array, const void* element) {
     if (!array) return TOOLBOX_ERROR_INVALID_PARAM;
 
     // ensure capacity
@@ -89,7 +89,7 @@ TOOLBOX_FUNC toolbox_result darray_push_back(darray* array, const void* element)
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_pop_back(darray* array, void* elementOut) {
+TOOLBOX_API toolbox_result darray_pop_back(darray* array, void* elementOut) {
     if (!array || array->size == 0) return TOOLBOX_ERROR_EMPTY;
     
     if (elementOut) {
@@ -102,28 +102,28 @@ TOOLBOX_FUNC toolbox_result darray_pop_back(darray* array, void* elementOut) {
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC const void* darray_const_peek(const darray* array, unsigned long long index) {
+TOOLBOX_API const void* darray_const_peek(const darray* array, unsigned long long index) {
     if (!array || index >= array->size) return NULL;
     return (char*)array->data + (index * array->elementSize);
 }
 
-TOOLBOX_FUNC const void* darray_const_data(const darray* array) {
+TOOLBOX_API const void* darray_const_data(const darray* array) {
     return array ? array->data : NULL;
 }
 
-TOOLBOX_FUNC toolbox_result darray_get(const darray* array, unsigned long long index, void* elementOut) {
+TOOLBOX_API toolbox_result darray_get(const darray* array, unsigned long long index, void* elementOut) {
     if (!array || !elementOut || index >= array->size) return TOOLBOX_ERROR_INVALID_PARAM;
     memcpy(elementOut, (char*)array->data + (index * array->elementSize), array->elementSize);
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_set(darray* array, unsigned long long index, const void* element) {
+TOOLBOX_API toolbox_result darray_set(darray* array, unsigned long long index, const void* element) {
     if (!array || !element || index >= array->size) return TOOLBOX_ERROR_INVALID_PARAM;
     memcpy((char*)array->data + (index * array->elementSize), element, array->elementSize);
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_insert_at(darray* array, unsigned long long index, const void* element) {
+TOOLBOX_API toolbox_result darray_insert_at(darray* array, unsigned long long index, const void* element) {
     if (!array || !element || index > array->size) return TOOLBOX_ERROR_INVALID_PARAM;
 
     // ensure capacity
@@ -146,7 +146,7 @@ TOOLBOX_FUNC toolbox_result darray_insert_at(darray* array, unsigned long long i
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_remove_at(darray* array, unsigned long long index, void* elementOut) {
+TOOLBOX_API toolbox_result darray_remove_at(darray* array, unsigned long long index, void* elementOut) {
     if (!array || index >= array->size) {
         return TOOLBOX_ERROR_INVALID_PARAM;
     }
@@ -172,7 +172,7 @@ TOOLBOX_FUNC toolbox_result darray_remove_at(darray* array, unsigned long long i
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_resize(darray* array, unsigned long long newSize) {
+TOOLBOX_API toolbox_result darray_resize(darray* array, unsigned long long newSize) {
     if (!array) return TOOLBOX_ERROR_INVALID_PARAM;
     
     if (newSize > array->capacity) {
@@ -188,7 +188,7 @@ TOOLBOX_FUNC toolbox_result darray_resize(darray* array, unsigned long long newS
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_reserve(darray* array, unsigned long long newCapacity) {
+TOOLBOX_API toolbox_result darray_reserve(darray* array, unsigned long long newCapacity) {
     if (!array) return TOOLBOX_ERROR_INVALID_PARAM;
     if (newCapacity <= array->capacity) return TOOLBOX_SUCCESS;
 
@@ -223,7 +223,7 @@ TOOLBOX_FUNC toolbox_result darray_reserve(darray* array, unsigned long long new
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC toolbox_result darray_shrink_to_fit(darray* array) {
+TOOLBOX_API toolbox_result darray_shrink_to_fit(darray* array) {
     if (!array) return TOOLBOX_ERROR_INVALID_PARAM;
     if (array->size == array->capacity) return TOOLBOX_SUCCESS;
 
@@ -248,31 +248,31 @@ TOOLBOX_FUNC toolbox_result darray_shrink_to_fit(darray* array) {
     return TOOLBOX_SUCCESS;
 }
 
-TOOLBOX_FUNC void darray_clear(darray* array) {
+TOOLBOX_API void darray_clear(darray* array) {
     if (array) {
         array->size = 0;
         // note: memory is not freed, just reset size
     }
 }
 
-TOOLBOX_FUNC unsigned long long darray_size(const darray* array) {
+TOOLBOX_API unsigned long long darray_size(const darray* array) {
     return array ? array->size : 0;
 }
 
-TOOLBOX_FUNC unsigned long long darray_capacity(const darray* array) {
+TOOLBOX_API unsigned long long darray_capacity(const darray* array) {
     return array ? array->capacity : 0;
 }
 
-TOOLBOX_FUNC bool darray_empty(const darray* array) {
+TOOLBOX_API bool darray_empty(const darray* array) {
     return array ? (array->size == 0) : true;
 }
 
-TOOLBOX_FUNC const void* darray_front(const darray* array) {
+TOOLBOX_API const void* darray_front(const darray* array) {
     if (!array || array->size == 0) return NULL;
     return (char*)array->data;
 }
 
-TOOLBOX_FUNC const void* darray_back(const darray* array) {
+TOOLBOX_API const void* darray_back(const darray* array) {
     if (!array || array->size == 0) return NULL;
     return (char*)array->data + ((array->size - 1) * array->elementSize);
 }

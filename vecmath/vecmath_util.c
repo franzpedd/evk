@@ -16,43 +16,43 @@ extern "C" {
 // angle utilities
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float to_fradians(float degrees) {
+VECMATH_API float to_fradians(float degrees) {
     return degrees * VECMATH_FLT_DEG_TO_RAD;
 }
 
-VECMATH_FUNC float to_fdegrees(float radians) {
+VECMATH_API float to_fdegrees(float radians) {
     return radians * VECMATH_FLT_RAD_TO_DEG;
 }
 
-VECMATH_FUNC float f_cos(float angle_radians) {
+VECMATH_API float f_cos(float angle_radians) {
     return cosf(angle_radians);
 }
 
-VECMATH_FUNC float f_sin(float angle_radians) {
+VECMATH_API float f_sin(float angle_radians) {
     return sinf(angle_radians);
 }
 
-VECMATH_FUNC float f_tan(float angle_radians) {
+VECMATH_API float f_tan(float angle_radians) {
     return tanf(angle_radians);
 }
 
-VECMATH_FUNC double to_dradians(double degrees) {
+VECMATH_API double to_dradians(double degrees) {
     return degrees * VECMATH_DBL_DEG_TO_RAD;
 }
 
-VECMATH_FUNC double to_ddegrees(double radians) {
+VECMATH_API double to_ddegrees(double radians) {
     return radians * VECMATH_DBL_RAD_TO_DEG;
 }
 
-VECMATH_FUNC double d_cos(double angle_radians) {
+VECMATH_API double d_cos(double angle_radians) {
     return cos(angle_radians);
 }
 
-VECMATH_FUNC double d_sin(double angle_radians) {
+VECMATH_API double d_sin(double angle_radians) {
     return sin(angle_radians);
 }
 
-VECMATH_FUNC double d_tan(double angle_radians) {
+VECMATH_API double d_tan(double angle_radians) {
     return tan(angle_radians);
 }
 
@@ -60,7 +60,7 @@ VECMATH_FUNC double d_tan(double angle_radians) {
 // generic utilities
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float f_power(float b, int e) 
+VECMATH_API float f_power(float b, int e) 
 {
     // edge cases
     if (e < 0) return 1.0f / f_power(b, -e);
@@ -78,7 +78,7 @@ VECMATH_FUNC float f_power(float b, int e)
     return result;
 }
 
-VECMATH_FUNC double d_power(double b, int e)
+VECMATH_API double d_power(double b, int e)
 {
     // edge cases
     if (e < 0) return 1.0 / d_power(b, -e);
@@ -96,59 +96,59 @@ VECMATH_FUNC double d_power(double b, int e)
     return result;
 }
 
-VECMATH_FUNC float f_log10(const float x) {
+VECMATH_API float f_log10(const float x) {
     return log10f(x);
 }
 
-VECMATH_FUNC double d_log10(const double x) {
+VECMATH_API double d_log10(const double x) {
     return log10(x);
 }
 
-VECMATH_FUNC float f_log2(const float x) {
+VECMATH_API float f_log2(const float x) {
     return log2f(x);
 }
 
-VECMATH_FUNC double d_log2(const double x) {
+VECMATH_API double d_log2(const double x) {
     return log2(x);
 }
 
-VECMATH_FUNC float f_logn(const float x) {
+VECMATH_API float f_logn(const float x) {
     return logf(x);
 }
 
-VECMATH_FUNC double d_logn(const double x) {
+VECMATH_API double d_logn(const double x) {
     return log(x);
 }
 
-VECMATH_FUNC float f_floor(const float x) {
+VECMATH_API float f_floor(const float x) {
     return floorf(x);
 }
 
-VECMATH_FUNC double d_floor(const double x) {
+VECMATH_API double d_floor(const double x) {
     return floor(x);
 }
 
-VECMATH_FUNC float f_ceil(const float x) {
+VECMATH_API float f_ceil(const float x) {
     return ceilf(x);
 }
 
-VECMATH_FUNC double d_ceil(const double x) {
+VECMATH_API double d_ceil(const double x) {
     return ceil(x);
 }
 
-VECMATH_FUNC float f_frac(const float x) {
+VECMATH_API float f_frac(const float x) {
     return x - f_floor(x);
 }
 
-VECMATH_FUNC double d_frac(const double x) {
+VECMATH_API double d_frac(const double x) {
     return x - d_floor(x);
 }
 
-VECMATH_FUNC float f_round(const float x) {
+VECMATH_API float f_round(const float x) {
     return roundf(x);
 }
 
-VECMATH_FUNC double d_round(const double x) {
+VECMATH_API double d_round(const double x) {
     return round(x);
 }
 

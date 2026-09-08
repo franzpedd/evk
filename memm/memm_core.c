@@ -42,22 +42,22 @@ typedef struct memm
 static memm_t g_memm = { 0 };
 
 /// @brief internal allocation tracking (uses real malloc/free)
-static MEMM_FUNC void* internal_malloc(unsigned long long size) {
+static void* internal_malloc(unsigned long long size) {
     return malloc(size);
 }
 
 /// @brief internal memory de-allocation
-static MEMM_FUNC void internal_free(void* ptr) {
+static void internal_free(void* ptr) {
     free(ptr);
 }
 
 /// @brief hashes pointer for hash table
-static MEMM_FUNC unsigned long long memm_hash_ptr(void* ptr) {
+static unsigned long long memm_hash_ptr(void* ptr) {
     return ((unsigned long long)ptr) & (MEMM_HASH_TABLE_SIZE - 1);
 }
 
 /// @brief register an allocation
-static MEMM_FUNC bool memm_register_allocation(void* ptr, unsigned long long size, const char* file, int line) {
+static bool memm_register_allocation(void* ptr, unsigned long long size, const char* file, int line) {
     if (!ptr || !g_memm.initialized) return false;
     if (size == 0) return true;
     
@@ -91,7 +91,7 @@ static MEMM_FUNC bool memm_register_allocation(void* ptr, unsigned long long siz
 }
 
 /// @brief unregister an allocation
-static MEMM_FUNC bool memm_unregister_allocation(void* ptr, const char* file, int line) {
+static bool memm_unregister_allocation(void* ptr, const char* file, int line) {
     if (!ptr || !g_memm.initialized) return false;
     
     unsigned long long hash = memm_hash_ptr(ptr);
@@ -118,7 +118,7 @@ static MEMM_FUNC bool memm_unregister_allocation(void* ptr, const char* file, in
 }
 
 /// @brief safe multiplication with overflow check
-static MEMM_FUNC bool safe_multiply(unsigned long long a, unsigned long long b, unsigned long long* result) {
+static bool safe_multiply(unsigned long long a, unsigned long long b, unsigned long long* result) {
     if (a > 0 && b > SIZE_MAX / a) return false;
     *result = a * b;
     return true;
@@ -128,7 +128,7 @@ static MEMM_FUNC bool safe_multiply(unsigned long long a, unsigned long long b, 
 // functions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-MEMM_FUNC bool memm_init(void) {
+MEMM_API bool memm_init(void) {
     if (g_memm.initialized) return true;
     memset(&g_memm, 0, sizeof(g_memm));
     g_memm.initialized = 1;
@@ -140,7 +140,7 @@ MEMM_FUNC bool memm_init(void) {
     return true;
 }
 
-MEMM_FUNC void memm_shutdown(void) {
+MEMM_API void memm_shutdown(void) {
     if (!g_memm.initialized) return;
     
     // Note: We don't free user allocations here - that would cause double frees
@@ -161,7 +161,7 @@ MEMM_FUNC void memm_shutdown(void) {
     g_memm.initialized = 0;
 }
 
-MEMM_FUNC void* memm_malloc(unsigned long long size, const char* file, int line) {
+MEMM_API void* memm_malloc(unsigned long long size, const char* file, int line) {
     if (!g_memm.initialized) return NULL;
     if (size == 0) return NULL;
     
@@ -176,7 +176,7 @@ MEMM_FUNC void* memm_malloc(unsigned long long size, const char* file, int line)
     return ptr;
 }
 
-MEMM_FUNC void* memm_calloc(unsigned long long num, unsigned long long size, const char* file, int line) {
+MEMM_API void* memm_calloc(unsigned long long num, unsigned long long size, const char* file, int line) {
     if (!g_memm.initialized) return NULL;
     if (num == 0 || size == 0) return NULL;
     
@@ -199,7 +199,7 @@ MEMM_FUNC void* memm_calloc(unsigned long long num, unsigned long long size, con
     return ptr;
 }
 
-MEMM_FUNC void* memm_realloc(void* ptr, unsigned long long size, const char* file, int line) {
+MEMM_API void* memm_realloc(void* ptr, unsigned long long size, const char* file, int line) {
     if (!g_memm.initialized) return NULL;
     
     if (ptr == NULL) {
@@ -245,7 +245,7 @@ MEMM_FUNC void* memm_realloc(void* ptr, unsigned long long size, const char* fil
     return new_ptr;
 }
 
-MEMM_FUNC void memm_free(void* ptr, const char* file, int line) {
+MEMM_API void memm_free(void* ptr, const char* file, int line) {
     if (!g_memm.initialized || !ptr) return;
     
     bool tracked = memm_unregister_allocation(ptr, file, line);
@@ -258,32 +258,32 @@ MEMM_FUNC void memm_free(void* ptr, const char* file, int line) {
     }
 }
 
-MEMM_FUNC unsigned long long memm_get_current_usage() {
+MEMM_API unsigned long long memm_get_current_usage() {
     if (!g_memm.initialized) return 0;
     return g_memm.total_allocated - g_memm.total_freed;
 }
 
-MEMM_FUNC unsigned long long memm_get_peak_usage() {
+MEMM_API unsigned long long memm_get_peak_usage() {
     if (!g_memm.initialized) return 0;
     return g_memm.peak_memory;
 }
 
-MEMM_FUNC unsigned long long memm_get_allocation_count() {
+MEMM_API unsigned long long memm_get_allocation_count() {
     if (!g_memm.initialized) return 0;
     return g_memm.allocation_count;
 }
 
-MEMM_FUNC unsigned long long memm_get_free_count() {
+MEMM_API unsigned long long memm_get_free_count() {
     if (!g_memm.initialized) return 0;
     return g_memm.free_count;
 }
 
-MEMM_FUNC unsigned long long memm_get_active_allocation_count() {
+MEMM_API unsigned long long memm_get_active_allocation_count() {
     if (!g_memm.initialized) return 0;
     return g_memm.allocation_count - g_memm.free_count;
 }
 
-MEMM_FUNC unsigned long long memm_get_stats_string(char* buffer, unsigned long long buffer_size) {
+MEMM_API unsigned long long memm_get_stats_string(char* buffer, unsigned long long buffer_size) {
     if (!buffer || buffer_size == 0 || !g_memm.initialized) {
         return 0;
     }
@@ -320,7 +320,7 @@ MEMM_FUNC unsigned long long memm_get_stats_string(char* buffer, unsigned long l
     return (unsigned long long)written;
 }
 
-MEMM_FUNC unsigned long long memm_get_allocations_string(char* buffer, unsigned long long buffer_size) {
+MEMM_API unsigned long long memm_get_allocations_string(char* buffer, unsigned long long buffer_size) {
     if (!buffer || buffer_size == 0 || !g_memm.initialized) {
         return 0;
     }
@@ -397,7 +397,7 @@ MEMM_FUNC unsigned long long memm_get_allocations_string(char* buffer, unsigned 
     return total_written;
 }
 
-MEMM_FUNC unsigned long long memm_get_leaks_string(char* buffer, unsigned long long buffer_size) {
+MEMM_API unsigned long long memm_get_leaks_string(char* buffer, unsigned long long buffer_size) {
     if (!buffer || buffer_size == 0 || !g_memm.initialized) return 0;
     
     char* cursor = buffer;
@@ -472,7 +472,7 @@ MEMM_FUNC unsigned long long memm_get_leaks_string(char* buffer, unsigned long l
     return total_written;
 }
 
-MEMM_FUNC void memm_print_stats()
+MEMM_API void memm_print_stats()
 {
     #ifdef MEMM_ENABLE_LOGGING
     char buf[MEMM_MAX_STRING_LENGTH];
@@ -482,7 +482,7 @@ MEMM_FUNC void memm_print_stats()
     #endif
 }
 
-MEMM_FUNC void memm_print_allocations()
+MEMM_API void memm_print_allocations()
 {
     #ifdef MEMM_ENABLE_LOGGING
     char buf[MEMM_MAX_STRING_LENGTH];

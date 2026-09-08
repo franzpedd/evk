@@ -20,19 +20,19 @@ extern "C" {
 // stb wrapping
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC unsigned char* evk_stb_load_from_file(const char* filepath, int32_t* width, int32_t* height, int32_t* channels, int32_t desiredChannels) {
+EVK_API unsigned char* evk_stb_load_from_file(const char* filepath, int32_t* width, int32_t* height, int32_t* channels, int32_t desiredChannels) {
     return stbi_load(filepath, width, height, channels, desiredChannels);
 }
 
-EVK_FUNC unsigned char* evk_stb_load_from_memory(const unsigned char* data, size_t length, int32_t* width, int32_t* height, int32_t* channels, int32_t desiredChannels) {
+EVK_API unsigned char* evk_stb_load_from_memory(const unsigned char* data, size_t length, int32_t* width, int32_t* height, int32_t* channels, int32_t desiredChannels) {
     return stbi_load_from_memory(data, (int32_t)length, width, height, channels, desiredChannels);
 }
 
-EVK_FUNC const char* evk_stb_failure_reason() {
+EVK_API const char* evk_stb_failure_reason() {
     return stbi_failure_reason();
 }
 
-EVK_FUNC void evk_stb_free(void* data) {
+EVK_API void evk_stb_free(void* data) {
     stbi_image_free(data);
 }
 
@@ -52,7 +52,7 @@ struct evkTexture2D
     const char* path;
 };
 
-EVK_FUNC evkTexture2D* evk_texture2d_create_from_path(const char* path, bool ui) {
+EVK_API evkTexture2D* evk_texture2d_create_from_path(const char* path, bool ui) {
     if (path == NULL) return NULL;
 
     evkTexture2D* texture = (evkTexture2D*)m_malloc(sizeof(evkTexture2D));
@@ -237,7 +237,7 @@ EVK_FUNC evkTexture2D* evk_texture2d_create_from_path(const char* path, bool ui)
     return texture;
 }
 
-EVK_FUNC evkTexture2D* evk_texture2d_create_from_buffer(uint8_t* buffer, size_t bufferLen, uint32_t width, uint32_t height, bool ui) {
+EVK_API evkTexture2D* evk_texture2d_create_from_buffer(uint8_t* buffer, size_t bufferLen, uint32_t width, uint32_t height, bool ui) {
     if (!buffer || width == 0 || height == 0) return NULL;
 
     evkTexture2D* texture = (evkTexture2D*)m_malloc(sizeof(evkTexture2D));
@@ -419,7 +419,7 @@ EVK_FUNC evkTexture2D* evk_texture2d_create_from_buffer(uint8_t* buffer, size_t 
     return texture;
 }
 
-EVK_FUNC void evk_texture2d_destroy(evkTexture2D* texture) {
+EVK_API void evk_texture2d_destroy(evkTexture2D* texture) {
     EVK_ASSERT(texture != NULL, "Vulkan Texture is NULL");
     VkDevice device = evk_get_device();
 
@@ -431,7 +431,7 @@ EVK_FUNC void evk_texture2d_destroy(evkTexture2D* texture) {
     m_free(texture);
 }
 
-EVK_FUNC const char* evk_texture2d_get_path(evkTexture2D* texture) {
+EVK_API const char* evk_texture2d_get_path(evkTexture2D* texture) {
     if (texture) {
         if (texture->path == NULL) {
             EVK_LOG(evk_Warn, "Texture has a NULL path, probably created as a buffer and not diskpath");
@@ -442,23 +442,23 @@ EVK_FUNC const char* evk_texture2d_get_path(evkTexture2D* texture) {
     return NULL;
 }
 
-EVK_FUNC uint32_t evk_texture2d_get_width(evkTexture2D* texture) {
+EVK_API uint32_t evk_texture2d_get_width(evkTexture2D* texture) {
     return texture ? texture->width : 0;
 }
 
-EVK_FUNC uint32_t evk_texture2d_get_height(evkTexture2D* texture) {
+EVK_API uint32_t evk_texture2d_get_height(evkTexture2D* texture) {
     return texture ? texture->height : 0;
 }
 
-EVK_FUNC uint32_t evk_texture2d_get_mip_levels(evkTexture2D* texture) {
+EVK_API uint32_t evk_texture2d_get_mip_levels(evkTexture2D* texture) {
     return texture ? texture->mipLevel : 0;
 }
 
-EVK_FUNC VkSampler evk_texture2d_get_sampler(evkTexture2D* texture) {
+EVK_API VkSampler evk_texture2d_get_sampler(evkTexture2D* texture) {
     return texture ? texture->sampler : VK_NULL_HANDLE;
 }
 
-EVK_FUNC VkImageView evk_texture2d_get_view(evkTexture2D* texture) {
+EVK_API VkImageView evk_texture2d_get_view(evkTexture2D* texture) {
     return texture ? texture->view : VK_NULL_HANDLE;
 }
 
@@ -498,7 +498,7 @@ static void ievk_grid_refresh_data(evkGrid* grid) {
     }
 }
 
-EVK_FUNC evkGrid* evk_grid_create() {
+EVK_API evkGrid* evk_grid_create() {
     evkGrid* grid = (evkGrid*)m_malloc(sizeof(evkGrid));
     if (!grid) return NULL;
 
@@ -559,7 +559,7 @@ EVK_FUNC evkGrid* evk_grid_create() {
     return grid;
 }
 
-EVK_FUNC void evk_grid_destroy(evkGrid* grid) {
+EVK_API void evk_grid_destroy(evkGrid* grid) {
     if (!grid) return;
 
     VkDevice device = evk_get_device();
@@ -569,7 +569,7 @@ EVK_FUNC void evk_grid_destroy(evkGrid* grid) {
     m_free(grid);
 }
 
-EVK_FUNC void evk_grid_update(evkGrid* grid, bool resend) {
+EVK_API void evk_grid_update(evkGrid* grid, bool resend) {
     if (!grid) return;
 
     // really nothing much right now as grid is not yet customizeble
@@ -578,7 +578,7 @@ EVK_FUNC void evk_grid_update(evkGrid* grid, bool resend) {
     }
 }
 
-EVK_FUNC void evk_grid_render(evkGrid* grid) {
+EVK_API void evk_grid_render(evkGrid* grid) {
     if (!grid) return;
 
     const VkDeviceSize offsets[] = { 0 };
@@ -720,7 +720,7 @@ static void ievk_sprite_refresh_data(evkSprite* sprite) {
     evk_sprite_update(sprite, false);
 }
 
-EVK_FUNC evkSprite* evk_sprite_create_from_path(const char* path, uint32_t id) {
+EVK_API evkSprite* evk_sprite_create_from_path(const char* path, uint32_t id) {
     if (path == NULL) {
         EVK_LOG(evk_Error, "Sprite path is NULL");
         return NULL;
@@ -867,7 +867,7 @@ EVK_FUNC evkSprite* evk_sprite_create_from_path(const char* path, uint32_t id) {
     return sprite;
 }
 
-EVK_FUNC void evk_sprite_destroy(evkSprite* sprite) {
+EVK_API void evk_sprite_destroy(evkSprite* sprite) {
     if (!sprite) return;
 
     VkDevice device = evk_get_device();
@@ -888,7 +888,7 @@ EVK_FUNC void evk_sprite_destroy(evkSprite* sprite) {
     m_free(sprite);
 }
 
-EVK_FUNC void evk_sprite_update(evkSprite* sprite, bool resend) {
+EVK_API void evk_sprite_update(evkSprite* sprite, bool resend) {
     if (!sprite) return;
 
     VkDevice device = evk_get_device();
@@ -909,7 +909,7 @@ EVK_FUNC void evk_sprite_update(evkSprite* sprite, bool resend) {
     }
 }
 
-EVK_FUNC void evk_sprite_render(evkSprite* sprite) {
+EVK_API void evk_sprite_render(evkSprite* sprite) {
     if (!sprite) return;
 
     const VkDeviceSize offsets[] = { 0 };
@@ -963,12 +963,12 @@ EVK_FUNC void evk_sprite_render(evkSprite* sprite) {
     vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
 }
 
-EVK_FUNC evkTexture2D* evk_sprite_get_albedo(evkSprite* sprite) {
+EVK_API evkTexture2D* evk_sprite_get_albedo(evkSprite* sprite) {
     if (!sprite) return NULL;
     return sprite->albedo;
 }
 
-EVK_FUNC void evk_sprite_set_albedo(evkSprite* sprite, const char* path) {
+EVK_API void evk_sprite_set_albedo(evkSprite* sprite, const char* path) {
     if (sprite == NULL) {
         EVK_LOG(evk_Error, "Sprite is NULL");
         return;
@@ -995,11 +995,11 @@ EVK_FUNC void evk_sprite_set_albedo(evkSprite* sprite, const char* path) {
     ievk_sprite_refresh_modelmatrix(sprite);
 }
 
-EVK_FUNC uint32_t evk_sprite_get_id(evkSprite* sprite) {
+EVK_API uint32_t evk_sprite_get_id(evkSprite* sprite) {
     return sprite != NULL ? sprite->id : 0;
 }
 
-EVK_FUNC float3 evk_sprite_get_translation(evkSprite* sprite)
+EVK_API float3 evk_sprite_get_translation(evkSprite* sprite)
 {
     float3 res = { 0 };
     res.x = 0.0f;
@@ -1008,14 +1008,14 @@ EVK_FUNC float3 evk_sprite_get_translation(evkSprite* sprite)
     return sprite == NULL ? res : sprite->translation;
 }
 
-EVK_FUNC void evk_sprite_set_translation(evkSprite* sprite, const float3 translation) {
+EVK_API void evk_sprite_set_translation(evkSprite* sprite, const float3 translation) {
     if (sprite != NULL) {
         sprite->translation = translation;
         ievk_sprite_refresh_modelmatrix(sprite);
     }
 }
 
-EVK_FUNC float3 evk_sprite_get_rotation(evkSprite* sprite) {
+EVK_API float3 evk_sprite_get_rotation(evkSprite* sprite) {
     float3 res = { 0 };
     res.x = 0.0f;
     res.y = 0.0f;
@@ -1023,21 +1023,21 @@ EVK_FUNC float3 evk_sprite_get_rotation(evkSprite* sprite) {
     return sprite == NULL ? res : sprite->rotation;
 }
 
-EVK_FUNC void evk_sprite_set_rotation(evkSprite* sprite, const float3 rotation) {
+EVK_API void evk_sprite_set_rotation(evkSprite* sprite, const float3 rotation) {
     if (sprite != NULL) {
         sprite->rotation = rotation;
         ievk_sprite_refresh_modelmatrix(sprite);
     }
 }
 
-EVK_FUNC float2 evk_sprite_get_scale(evkSprite* sprite) {
+EVK_API float2 evk_sprite_get_scale(evkSprite* sprite) {
     float2 res = { 0 };
     res.x = 0.0f;
     res.y = 0.0f;
     return sprite == NULL ? res : sprite->scale;
 }
 
-EVK_FUNC void evk_sprite_set_scale(evkSprite* sprite, const float2 scale) {
+EVK_API void evk_sprite_set_scale(evkSprite* sprite, const float2 scale) {
     if (sprite != NULL) {
         sprite->scale = scale;
         ievk_sprite_refresh_modelmatrix(sprite);
@@ -1062,7 +1062,7 @@ struct evkBillboard
     VkDescriptorSet descriptorSets[EVK_CONCURRENTLY_RENDERED_FRAMES];
 };
 
-static EVK_FUNC void ievk_billboard_refresh_modelmatrix(evkBillboard* billboard) {
+static void ievk_billboard_refresh_modelmatrix(evkBillboard* billboard) {
     if (!billboard) return;
 
     float3 rot_sprite = { to_fradians(billboard->rotation.x), to_fradians(billboard->rotation.y), to_fradians(billboard->rotation.z) };
@@ -1085,7 +1085,7 @@ static EVK_FUNC void ievk_billboard_refresh_modelmatrix(evkBillboard* billboard)
     billboard->modelMatrix = model_matrix;
 }
 
-static EVK_FUNC void ievk_billboard_refresh_data(evkBillboard* billboard)
+static void ievk_billboard_refresh_data(evkBillboard* billboard)
 {
     VkDevice device = evk_get_device();
 
@@ -1146,7 +1146,7 @@ static EVK_FUNC void ievk_billboard_refresh_data(evkBillboard* billboard)
     evk_billboard_update(billboard, false);
 }
 
-EVK_FUNC evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t id) {
+EVK_API evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t id) {
     if (path == NULL) {
         EVK_LOG(evk_Error, "Sprite path is NULL");
         return NULL;
@@ -1291,7 +1291,7 @@ EVK_FUNC evkBillboard* evk_billboard_create_from_path(const char* path, uint32_t
     return billboard;
 }
 
-EVK_FUNC void evk_billboard_destroy(evkBillboard* billboard) {
+EVK_API void evk_billboard_destroy(evkBillboard* billboard) {
     if (!billboard) return;
 
     VkDevice device = evk_get_device();
@@ -1312,7 +1312,7 @@ EVK_FUNC void evk_billboard_destroy(evkBillboard* billboard) {
     m_free(billboard);
 }
 
-EVK_FUNC void evk_billboard_update(evkBillboard* billboard, bool resend) {
+EVK_API void evk_billboard_update(evkBillboard* billboard, bool resend) {
     if (!billboard) return;
 
     VkDevice device = evk_get_device();
@@ -1333,7 +1333,7 @@ EVK_FUNC void evk_billboard_update(evkBillboard* billboard, bool resend) {
     }
 }
 
-EVK_FUNC void evk_billboard_render(evkBillboard* billboard) {
+EVK_API void evk_billboard_render(evkBillboard* billboard) {
     const VkDeviceSize offsets[] = { 0 };
     evkPipeline* pipeline = NULL;
     VkCommandBuffer cmdBuffer = VK_NULL_HANDLE;
@@ -1384,11 +1384,11 @@ EVK_FUNC void evk_billboard_render(evkBillboard* billboard) {
     vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
 }
 
-EVK_FUNC uint32_t evk_billboard_get_id(evkBillboard* billboard) {
+EVK_API uint32_t evk_billboard_get_id(evkBillboard* billboard) {
     return billboard != NULL ? billboard->id : 0;
 }
 
-EVK_FUNC float3 evk_billboard_get_translation(evkBillboard* billboard) {
+EVK_API float3 evk_billboard_get_translation(evkBillboard* billboard) {
     float3 res = { 0 };
     res.x = 0.0f;
     res.y = 0.0f;
@@ -1396,14 +1396,14 @@ EVK_FUNC float3 evk_billboard_get_translation(evkBillboard* billboard) {
     return billboard == NULL ? res : billboard->translation;
 }
 
-EVK_FUNC void evk_billboard_set_translation(evkBillboard* billboard, const float3 translation) {
+EVK_API void evk_billboard_set_translation(evkBillboard* billboard, const float3 translation) {
     if (billboard != NULL) {
         billboard->translation = translation;
         ievk_billboard_refresh_modelmatrix(billboard);
     }
 }
 
-EVK_FUNC float3 evk_billboard_get_rotation(evkBillboard* billboard) {
+EVK_API float3 evk_billboard_get_rotation(evkBillboard* billboard) {
     float3 res = { 0 };
     res.x = 0.0f;
     res.y = 0.0f;
@@ -1411,21 +1411,21 @@ EVK_FUNC float3 evk_billboard_get_rotation(evkBillboard* billboard) {
     return billboard == NULL ? res : billboard->rotation;
 }
 
-EVK_FUNC void evk_billboard_set_rotation(evkBillboard* billboard, const float3 rotation) {
+EVK_API void evk_billboard_set_rotation(evkBillboard* billboard, const float3 rotation) {
     if (billboard != NULL) {
         billboard->rotation = rotation;
         ievk_billboard_refresh_modelmatrix(billboard);
     }
 }
 
-EVK_FUNC float2 evk_billboard_get_scale(evkBillboard* billboard) {
+EVK_API float2 evk_billboard_get_scale(evkBillboard* billboard) {
     float2 res = { 0 };
     res.x = 0.0f;
     res.y = 0.0f;
     return billboard == NULL ? res : billboard->scale;
 }
 
-EVK_FUNC void evk_billboard_set_scale(evkBillboard* billboard, const float2 scale)
+EVK_API void evk_billboard_set_scale(evkBillboard* billboard, const float2 scale)
 {
     if (billboard != NULL) {
         billboard->scale = scale;

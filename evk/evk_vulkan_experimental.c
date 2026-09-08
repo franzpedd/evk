@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-EVK_FUNC void evk_dump_picking_framebuffer() {
+EVK_API void evkexp_dump_picking_framebuffer() {
     VkDevice device = evk_get_device();
     VkPhysicalDevice physicalDevice = evk_get_physical_device();
     VkQueue queue = evk_get_graphics_queue();
@@ -239,7 +239,7 @@ EVK_FUNC void evk_dump_picking_framebuffer() {
     vkDestroyBuffer(device, stagingBuffer, NULL);
 }
 
-EVK_FUNC void evk_debug_pick_coordinates(float2 mousePos) {
+EVK_API void evkexp_debug_pick_coordinates(float2 mousePos) {
     float2 winSize = evk_get_size();
     if (evk_using_viewport()) {
         winSize = evk_get_viewport_size();

@@ -13,11 +13,11 @@ extern "C" {
 // quaternion operations
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_identity(void) {
+VECMATH_API fquat fquat_identity(void) {
     return (fquat){0.0f, 0.0f, 0.0f, 1.0f};
 }
 
-VECMATH_FUNC dquat dquat_identity(void) {
+VECMATH_API dquat dquat_identity(void) {
     return (dquat){0.0, 0.0, 0.0, 1.0};
 }
 
@@ -25,12 +25,12 @@ VECMATH_FUNC dquat dquat_identity(void) {
 // length
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float fquat_length(const fquat* q) {
+VECMATH_API float fquat_length(const fquat* q) {
     if (!q) return 0.0f;
     return sqrtf(q->x * q->x + q->y * q->y + q->z * q->z + q->w * q->w);
 }
 
-VECMATH_FUNC double dquat_length(const dquat* q) {
+VECMATH_API double dquat_length(const dquat* q) {
     if (!q) return 0.0;
     return sqrt(q->x * q->x + q->y * q->y + q->z * q->z + q->w * q->w);
 }
@@ -39,12 +39,12 @@ VECMATH_FUNC double dquat_length(const dquat* q) {
 // quaternion conjugate (inverse for unit quaternions)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_conjugate(const fquat* q) {
+VECMATH_API fquat fquat_conjugate(const fquat* q) {
     if (!q) return fquat_identity();
     return (fquat){-q->x, -q->y, -q->z, q->w};
 }
 
-VECMATH_FUNC dquat dquat_conjugate(const dquat* q) {
+VECMATH_API dquat dquat_conjugate(const dquat* q) {
     if (!q) return dquat_identity();
     return (dquat){-q->x, -q->y, -q->z, q->w};
 }
@@ -53,7 +53,7 @@ VECMATH_FUNC dquat dquat_conjugate(const dquat* q) {
 // normalizes the quaternion
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_normalize(const fquat* q) {
+VECMATH_API fquat fquat_normalize(const fquat* q) {
     if (!q) return fquat_identity();
     
     float len = fquat_length(q);
@@ -63,7 +63,7 @@ VECMATH_FUNC fquat fquat_normalize(const fquat* q) {
     return (fquat){q->x * inv_len, q->y * inv_len, q->z * inv_len, q->w * inv_len};
 }
 
-VECMATH_FUNC dquat dquat_normalize(const dquat* q) {
+VECMATH_API dquat dquat_normalize(const dquat* q) {
     if (!q) return dquat_identity();
     
     double len = dquat_length(q);
@@ -77,12 +77,12 @@ VECMATH_FUNC dquat dquat_normalize(const dquat* q) {
 // returns the dot product of two quaternions
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float fquat_dot(const fquat* q1, const fquat* q2) {
+VECMATH_API float fquat_dot(const fquat* q1, const fquat* q2) {
     if (!q1 || !q2) return 0.0f;
     return q1->x * q2->x + q1->y * q2->y + q1->z * q2->z + q1->w * q2->w;
 }
 
-VECMATH_FUNC double dquat_dot(const dquat* q1, const dquat* q2) {
+VECMATH_API double dquat_dot(const dquat* q1, const dquat* q2) {
     if (!q1 || !q2) return 0.0;
     return q1->x * q2->x + q1->y * q2->y + q1->z * q2->z + q1->w * q2->w;
 }
@@ -91,7 +91,7 @@ VECMATH_FUNC double dquat_dot(const dquat* q1, const dquat* q2) {
 // performs linear interpolation
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_lerp(const fquat* q1, const fquat* q2, float t) {
+VECMATH_API fquat fquat_lerp(const fquat* q1, const fquat* q2, float t) {
     if (!q1 || !q2) return fquat_identity();
     
     // Clamp t to [0, 1]
@@ -106,7 +106,7 @@ VECMATH_FUNC fquat fquat_lerp(const fquat* q1, const fquat* q2, float t) {
     };
 }
 
-VECMATH_FUNC dquat dquat_lerp(const dquat* q1, const dquat* q2, double t) {
+VECMATH_API dquat dquat_lerp(const dquat* q1, const dquat* q2, double t) {
     if (!q1 || !q2) return dquat_identity();
     
     if (t < 0.0) t = 0.0;
@@ -124,7 +124,7 @@ VECMATH_FUNC dquat dquat_lerp(const dquat* q1, const dquat* q2, double t) {
 // performs spherical interpolation
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_slerp(const fquat* q1, const fquat* q2, float t) {
+VECMATH_API fquat fquat_slerp(const fquat* q1, const fquat* q2, float t) {
     if (!q1 || !q2) return fquat_identity();
     
     // clamp t to [0, 1]
@@ -163,7 +163,7 @@ VECMATH_FUNC fquat fquat_slerp(const fquat* q1, const fquat* q2, float t) {
     };
 }
 
-VECMATH_FUNC dquat dquat_slerp(const dquat* q1, const dquat* q2, double t) {
+VECMATH_API dquat dquat_slerp(const dquat* q1, const dquat* q2, double t) {
     if (!q1 || !q2) return dquat_identity();
     
     if (t < 0.0) t = 0.0;
@@ -202,7 +202,7 @@ VECMATH_FUNC dquat dquat_slerp(const dquat* q1, const dquat* q2, double t) {
 // creates quaternion from euler angles (radians) - ZYX order (yaw, pitch, roll)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fquat fquat_from_euler(const float3* rad) {
+VECMATH_API fquat fquat_from_euler(const float3* rad) {
     if (!rad) return fquat_identity();
     
     float cx = cosf(rad->x * 0.5f);
@@ -221,7 +221,7 @@ VECMATH_FUNC fquat fquat_from_euler(const float3* rad) {
     };
 }
 
-VECMATH_FUNC dquat dquat_from_euler(const double3* rad) {
+VECMATH_API dquat dquat_from_euler(const double3* rad) {
     if (!rad) return dquat_identity();
     
     double cx = cos(rad->x * 0.5);
@@ -243,7 +243,7 @@ VECMATH_FUNC dquat dquat_from_euler(const double3* rad) {
 // converts the quaternion into euler angles (roll=x, pitch=y, yaw=z)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC float3 fquat_to_euler(const fquat* q) {
+VECMATH_API float3 fquat_to_euler(const fquat* q) {
     float3 result = float3_zero();
     if (!q) return result;
     
@@ -264,7 +264,7 @@ VECMATH_FUNC float3 fquat_to_euler(const fquat* q) {
     return result;
 }
 
-VECMATH_FUNC double3 dquat_to_euler(const dquat* q) {
+VECMATH_API double3 dquat_to_euler(const dquat* q) {
     double3 result = double3_zero();
     if (!q) return result;
     
@@ -287,7 +287,7 @@ VECMATH_FUNC double3 dquat_to_euler(const dquat* q) {
 // converts the quaternion into a matrix
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-VECMATH_FUNC fmat4 fquat_to_fmat4_rowmajor(const fquat* q) {
+VECMATH_API fmat4 fquat_to_fmat4_rowmajor(const fquat* q) {
     fmat4 result = fmat4_zero();
     if (!q) return fmat4_identity();
     
@@ -324,7 +324,7 @@ VECMATH_FUNC fmat4 fquat_to_fmat4_rowmajor(const fquat* q) {
     return result;
 }
 
-VECMATH_FUNC fmat4 fquat_to_fmat4_colmajor(const fquat* q) {
+VECMATH_API fmat4 fquat_to_fmat4_colmajor(const fquat* q) {
     fmat4 result = fmat4_zero();
     if (!q) return fmat4_identity();
     
@@ -361,7 +361,7 @@ VECMATH_FUNC fmat4 fquat_to_fmat4_colmajor(const fquat* q) {
     return result;
 }
 
-VECMATH_FUNC dmat4 dquat_to_dmat4_rowmajor(const dquat* q) {
+VECMATH_API dmat4 dquat_to_dmat4_rowmajor(const dquat* q) {
     dmat4 result = dmat4_zero();
     if (!q) return dmat4_identity();
     
@@ -398,7 +398,7 @@ VECMATH_FUNC dmat4 dquat_to_dmat4_rowmajor(const dquat* q) {
     return result;
 }
 
-VECMATH_FUNC dmat4 dquat_to_dmat4_colmajor(const dquat* q) {
+VECMATH_API dmat4 dquat_to_dmat4_colmajor(const dquat* q) {
     dmat4 result = dmat4_zero();
     if (!q) return dmat4_identity();
     

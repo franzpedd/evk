@@ -22,6 +22,7 @@ struct evkContext
     bool hint_minimized;
     bool hint_vsync;
     bool hint_resize;
+    bool volkInit;
 
     evkCamera* mainCamera;
     idgen* idgen;
@@ -72,7 +73,7 @@ static evkContext* g_EVKContext = NULL;
 // context
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC evkResult evk_init(const evkCreateInfo* ci) {
+EVK_API evkResult evk_init(const evkCreateInfo* ci) {
     // general initialization
     memm_init();
 
@@ -100,7 +101,7 @@ EVK_FUNC evkResult evk_init(const evkCreateInfo* ci) {
     return evk_Success;
 }
 
-EVK_FUNC evkResult evk_shutdown() {
+EVK_API evkResult evk_shutdown() {
     evk_shutdown_backend();
     idgen_destroy(g_EVKContext->idgen);
     evk_camera_destroy(g_EVKContext->mainCamera);
@@ -112,17 +113,17 @@ EVK_FUNC evkResult evk_shutdown() {
     return evk_Success;
 }
 
-EVK_FUNC void evk_update(float timestep) {
+EVK_API void evk_update(float timestep) {
     if (g_EVKContext->hint_minimized) return;
     evk_update_backend(timestep);
 }
 
-EVK_FUNC void evk_render(float timestep) {
+EVK_API void evk_render(float timestep) {
     if (g_EVKContext->hint_minimized) return;
     evk_render_backend(timestep, &g_EVKContext->hint_resize);
 }
 
-EVK_FUNC void evk_resize(float2 size) {
+EVK_API void evk_resize(float2 size) {
     if (g_EVKContext == NULL) {
         return;
     }
@@ -137,13 +138,13 @@ EVK_FUNC void evk_resize(float2 size) {
     g_EVKContext->hint_resize = true;
 }
 
-EVK_FUNC void evk_resize_viewport(float2 size) {
+EVK_API void evk_resize_viewport(float2 size) {
     if (!g_EVKContext) return;
     if (!g_EVKContext->hint_viewport) return;
     g_EVKContext->viewportSize = size;
 }
 
-EVK_FUNC void evk_minimize() {
+EVK_API void evk_minimize() {
     if (g_EVKContext == NULL) {
         return;
     }
@@ -151,7 +152,7 @@ EVK_FUNC void evk_minimize() {
     g_EVKContext->hint_minimized = true;
 }
 
-EVK_FUNC void evk_restore() {
+EVK_API void evk_restore() {
     if (g_EVKContext == NULL) {
         return;
     }
@@ -159,16 +160,16 @@ EVK_FUNC void evk_restore() {
     g_EVKContext->hint_minimized = false;
 }
 
-EVK_FUNC uint32_t evk_pick_object(float2 xy) {
+EVK_API uint32_t evk_pick_object(float2 xy) {
     return evk_pick_object_backend(xy);
 }
 
-EVK_FUNC evkContext* evk_get_context() {
+EVK_API evkContext* evk_get_context() {
     if (!g_EVKContext) return NULL;
     return g_EVKContext;
 }
 
-EVK_FUNC evkCamera* evk_get_main_camera() {
+EVK_API evkCamera* evk_get_main_camera() {
     return g_EVKContext != NULL ? g_EVKContext->mainCamera : NULL;
 }
 
@@ -176,27 +177,27 @@ EVK_FUNC evkCamera* evk_get_main_camera() {
 // general getters/setters
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC bool evk_using_vsync() {
+EVK_API bool evk_using_vsync() {
     if (!g_EVKContext) return false;
     return g_EVKContext->hint_vsync;
 }
 
-EVK_FUNC bool evk_using_viewport() {
+EVK_API bool evk_using_viewport() {
     if (!g_EVKContext) return false;
     return g_EVKContext->hint_viewport;
 }
 
-EVK_FUNC bool evk_currently_minimized() {
+EVK_API bool evk_currently_minimized() {
     if (!g_EVKContext) return false;
     return g_EVKContext->hint_minimized;
 }
 
-EVK_FUNC evkMSAA evk_get_msaa() {
+EVK_API evkMSAA evk_get_msaa() {
     if (!g_EVKContext) return evk_Msaa_Off;
     return g_EVKContext->msaa;
 }
 
-EVK_FUNC float2 evk_get_size() {
+EVK_API float2 evk_get_size() {
     float2 res = { 0 };
     memset(&res, 0, sizeof(float2));
 
@@ -204,7 +205,7 @@ EVK_FUNC float2 evk_get_size() {
     return g_EVKContext->framebufferSize;
 }
 
-EVK_FUNC float2 evk_get_viewport_size() {
+EVK_API float2 evk_get_viewport_size() {
     float2 res = { 0 };
     memset(&res, 0, sizeof(float2));
 
@@ -214,7 +215,7 @@ EVK_FUNC float2 evk_get_viewport_size() {
     return g_EVKContext->viewportSize;
 }
 
-EVK_FUNC void evk_set_viewport_size(const float2 size) {
+EVK_API void evk_set_viewport_size(const float2 size) {
     if (!g_EVKContext) return;
     if (!g_EVKContext->hint_viewport) return;
 
@@ -226,7 +227,7 @@ EVK_FUNC void evk_set_viewport_size(const float2 size) {
 // callback related
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-EVK_FUNC void evk_set_user_pointer(void* pointer) {
+EVK_API void evk_set_user_pointer(void* pointer) {
     if (!g_EVKContext) {
         EVK_LOG(evk_Error, "EVK's context is NULL");
         return;
@@ -235,11 +236,11 @@ EVK_FUNC void evk_set_user_pointer(void* pointer) {
     g_EVKContext->userpointer_callback = pointer;
 }
 
-EVK_FUNC void* evk_get_user_pointer() {
+EVK_API void* evk_get_user_pointer() {
     return g_EVKContext == NULL ? NULL : g_EVKContext->userpointer_callback;
 }
 
-EVK_FUNC void evk_set_render_callback(evkCallback_Render callback) {
+EVK_API void evk_set_render_callback(evkCallback_Render callback) {
     if (!g_EVKContext) {
         EVK_LOG(evk_Error, "EVK's context is NULL");
         return;
@@ -248,11 +249,11 @@ EVK_FUNC void evk_set_render_callback(evkCallback_Render callback) {
     g_EVKContext->render_callback = callback;
 }
 
-EVK_FUNC evkCallback_Render evk_get_render_callback() {
+EVK_API evkCallback_Render evk_get_render_callback() {
     return g_EVKContext == NULL ? NULL : g_EVKContext->render_callback;
 }
 
-EVK_FUNC void evk_set_renderui_callback(evkCalllback_RenderUI callback) {
+EVK_API void evk_set_renderui_callback(evkCalllback_RenderUI callback) {
     if (!g_EVKContext) {
         EVK_LOG(evk_Error, "EVK's context is NULL");
         return;
@@ -261,7 +262,7 @@ EVK_FUNC void evk_set_renderui_callback(evkCalllback_RenderUI callback) {
     g_EVKContext->renderui_callback = callback;
 }
 
-EVK_FUNC evkCalllback_RenderUI evk_get_renderui_callback() {
+EVK_API evkCalllback_RenderUI evk_get_renderui_callback() {
     return g_EVKContext == NULL ? NULL : g_EVKContext->renderui_callback;
 }
 
@@ -269,7 +270,7 @@ EVK_FUNC evkCalllback_RenderUI evk_get_renderui_callback() {
 // logs and errors
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static EVK_FUNC const char* ievk_severity_to_str(evkSeverity severity) {
+static const char* ievk_severity_to_str(evkSeverity severity) {
     switch (severity)
     {
         case evk_Trace: return "TRACE";
@@ -282,7 +283,7 @@ static EVK_FUNC const char* ievk_severity_to_str(evkSeverity severity) {
     return "UNKNOWN";
 }
 
-static EVK_FUNC void ievk_log_format(char* outBuffer, size_t size, const struct tm* localTime, const char* file, int line, evkSeverity severity, const char* buffer) {
+static void ievk_log_format(char* outBuffer, size_t size, const struct tm* localTime, const char* file, int line, evkSeverity severity, const char* buffer) {
     snprintf
     (
         outBuffer,
@@ -301,7 +302,7 @@ static EVK_FUNC void ievk_log_format(char* outBuffer, size_t size, const struct 
     );
 }
 
-EVK_FUNC void evk_log_message(evkSeverity severity, const char* file, unsigned int line, const char* fmt, ...) {
+EVK_API void evk_log_message(evkSeverity severity, const char* file, unsigned int line, const char* fmt, ...) {
     char buffer[EVK_MAX_ERROR_LEN];
     va_list args;
     va_start(args, fmt);
@@ -337,7 +338,7 @@ EVK_FUNC void evk_log_message(evkSeverity severity, const char* file, unsigned i
 // camera related
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static EVK_FUNC void ievk_camera_update_view_matrix(evkCamera* camera) {
+static void ievk_camera_update_view_matrix(evkCamera* camera) {
     // calculate target point
     float3 target = float3_add(&camera->position, &camera->frontPosition);
     const float3 worldUp = { 0.0f, 1.0f, 0.0f };
@@ -347,7 +348,7 @@ static EVK_FUNC void ievk_camera_update_view_matrix(evkCamera* camera) {
     camera->viewPosition = camera->position;
 }
 
-EVK_FUNC evkCamera* evk_camera_create(float aspectRatio) {
+EVK_API evkCamera* evk_camera_create(float aspectRatio) {
     evkCamera* camera = (evkCamera*)m_malloc(sizeof(evkCamera));
     EVK_ASSERT(camera != NULL, "Failed to allocate memory for evkCamera");
     memset(camera, 0, sizeof(evkCamera));
@@ -380,13 +381,13 @@ EVK_FUNC evkCamera* evk_camera_create(float aspectRatio) {
     return camera;
 }
 
-EVK_FUNC void evk_camera_destroy(evkCamera* camera) {
+EVK_API void evk_camera_destroy(evkCamera* camera) {
     if (camera) {
         m_free(camera);
     }
 }
 
-EVK_FUNC void evk_camera_update(evkCamera* camera, float timestep) {
+EVK_API void evk_camera_update(evkCamera* camera, float timestep) {
     if (!camera->shouldMove) return;
 
     // calculate front vector
@@ -431,28 +432,28 @@ EVK_FUNC void evk_camera_update(evkCamera* camera, float timestep) {
     camera->viewInverse = fmat4_inverse(&camera->view);
 }
 
-EVK_FUNC void evk_camera_set_aspect_ratio(evkCamera* camera, float aspect) {
+EVK_API void evk_camera_set_aspect_ratio(evkCamera* camera, float aspect) {
     camera->perspective = fmat4_perspective_vulkan(to_fradians(camera->fov), aspect, camera->nearDist, camera->farDist);
     camera->perspectiveInverse = fmat4_inverse(&camera->perspective);
     camera->aspectRatio = aspect;
 }
 
-EVK_FUNC float evk_camera_get_aspect_ratio(evkCamera* camera) {
+EVK_API float evk_camera_get_aspect_ratio(evkCamera* camera) {
     if (!camera) return 1.0f;
     return camera->aspectRatio;
 }
 
-EVK_FUNC float evk_camera_get_fov(evkCamera* camera) {
+EVK_API float evk_camera_get_fov(evkCamera* camera) {
     if (!camera) return 1.0f;
     return camera->fov;
 }
 
-EVK_FUNC void evk_camera_translate(evkCamera* camera, float3 dir) {
+EVK_API void evk_camera_translate(evkCamera* camera, float3 dir) {
     camera->position = float3_add(&camera->position, &dir);
     ievk_camera_update_view_matrix(camera);
 }
 
-EVK_FUNC void evk_camera_rotate(evkCamera* camera, float3 dir) {
+EVK_API void evk_camera_rotate(evkCamera* camera, float3 dir) {
     // avoid scene flip
     if (camera->rotation.x >= 89.0f) camera->rotation.x = 89.0f;
     if (camera->rotation.x <= -89.0f) camera->rotation.x = -89.0f;
@@ -471,37 +472,37 @@ EVK_FUNC void evk_camera_rotate(evkCamera* camera, float3 dir) {
     ievk_camera_update_view_matrix(camera);
 }
 
-EVK_FUNC fmat4 evk_camera_get_view(evkCamera* camera) {
+EVK_API fmat4 evk_camera_get_view(evkCamera* camera) {
     if (!camera) return fmat4_identity();
     return camera->view;
 }
 
-EVK_FUNC fmat4 evk_camera_get_view_inverse(evkCamera* camera) {
+EVK_API fmat4 evk_camera_get_view_inverse(evkCamera* camera) {
     if (!camera) return fmat4_identity();
     return camera->viewInverse;
 }
 
-EVK_FUNC fmat4 evk_camera_get_perspective(evkCamera* camera) {
+EVK_API fmat4 evk_camera_get_perspective(evkCamera* camera) {
     if (!camera) return fmat4_identity();
     return camera->perspective;
 }
 
-EVK_FUNC fmat4 evk_camera_get_perspective_inverse(evkCamera* camera) {
+EVK_API fmat4 evk_camera_get_perspective_inverse(evkCamera* camera) {
     if (!camera) return fmat4_identity();
     return camera->perspectiveInverse;
 }
 
-EVK_FUNC void evk_camera_set_lock(evkCamera* camera, bool value) {
+EVK_API void evk_camera_set_lock(evkCamera* camera, bool value) {
     if (!camera) return;
     camera->shouldMove = value;
 }
 
-EVK_FUNC bool evk_camera_get_lock(evkCamera* camera) {
+EVK_API bool evk_camera_get_lock(evkCamera* camera) {
     if (!camera) return false;
     return camera->shouldMove;
 }
 
-EVK_FUNC void evk_camera_move(evkCamera* camera, evkCameraDir dir, bool moving) {
+EVK_API void evk_camera_move(evkCamera* camera, evkCameraDir dir, bool moving) {
     if (!camera) return;
 
     switch (dir)
@@ -513,33 +514,33 @@ EVK_FUNC void evk_camera_move(evkCamera* camera, evkCameraDir dir, bool moving) 
     }
 }
 
-EVK_FUNC bool evk_camera_get_speed_modifier(evkCamera* camera, float* value) {
+EVK_API bool evk_camera_get_speed_modifier(evkCamera* camera, float* value) {
     if (!camera) return false;
     if (value) *(value) = camera->modifierSpeed;
     return camera->modifierPressed;
 }
 
-EVK_FUNC void evk_camera_set_speed_modifier(evkCamera* camera, bool status, float value) {
+EVK_API void evk_camera_set_speed_modifier(evkCamera* camera, bool status, float value) {
     if (!camera) return;
     camera->modifierPressed = status;
     camera->modifierSpeed = value;
 }
 
-EVK_FUNC float3 evk_camera_get_position(evkCamera* camera) {
+EVK_API float3 evk_camera_get_position(evkCamera* camera) {
     float3 res = { 0.0f };
     memset(&res, 0, sizeof(float3));
     if (!camera) return res;
     return camera->position;
 }
 
-EVK_FUNC float3 evk_camera_get_rotation(evkCamera* camera) {
+EVK_API float3 evk_camera_get_rotation(evkCamera* camera) {
     float3 res = { 0.0f };
     memset(&res, 0, sizeof(float3));
     if (!camera) return res;
     return camera->rotation;
 }
 
-EVK_FUNC float3 evk_camera_get_front(evkCamera* camera) {
+EVK_API float3 evk_camera_get_front(evkCamera* camera) {
     float3 res = { 0.0f };
     memset(&res, 0, sizeof(float3));
     if (!camera) return res;
